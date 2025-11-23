@@ -16,7 +16,9 @@ RUN apt-get update && apt-get install -y \
     mesa-common-dev \
     libgl1-mesa-dev \
     libsamplerate0-dev \
-    librtlsdr-dev \
     && rm -rf /var/lib/apt/lists/*
+
+# Custom RTL-SDR library will be installed at runtime
+# via mounted DEBs from either rtlsdr-osmocom or rtlsdr-blog
 
 WORKDIR /build

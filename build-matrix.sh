@@ -1,58 +1,76 @@
 #!/bin/bash
-# volumio-rtlsdr-binaries build-matrix.sh
-# Builds dab-cmdline binaries for all supported architectures
+# foonerd-dab build-matrix.sh
+# Build foonerd-dab binaries for all architectures with specified RTL-SDR source
 
 set -e
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-cd "$SCRIPT_DIR"
-
 VERBOSE=""
-if [ "$1" = "--verbose" ] || [ "$1" = "-v" ]; then
-  VERBOSE="--verbose"
+RTLSDR_SOURCE=""
+
+# Parse arguments
+for arg in "$@"; do
+  if [[ "$arg" == "--verbose" ]]; then
+    VERBOSE="--verbose"
+  elif [[ "$arg" == --rtlsdr=* ]]; then
+    RTLSDR_SOURCE="$arg"
+  fi
+done
+
+# Require --rtlsdr flag
+if [ -z "$RTLSDR_SOURCE" ]; then
+  echo "Usage: $0 --rtlsdr=<source> [--verbose]"
+  echo ""
+  echo "Arguments:"
+  echo "  --rtlsdr: osmocom or blog (REQUIRED)"
+  echo "  --verbose: Show detailed build output"
+  echo ""
+  echo "Example:"
+  echo "  $0 --rtlsdr=osmocom"
+  echo "  $0 --rtlsdr=blog --verbose"
+  exit 1
 fi
 
 echo "========================================"
-echo "foonerd-dab build matrix"
+echo "foonerd-dab Build Matrix"
 echo "========================================"
+echo "RTL-SDR Source: ${RTLSDR_SOURCE#*=}"
 echo ""
 
-# Verify cherry-picked source exists
+# Check source directories
 if [ ! -d "source/foonerd-dab" ]; then
-  echo "[!] Source not found: source/foonerd-dab"
-  echo "[!] Cherry-pick source files first"
+  echo "Error: source/foonerd-dab not found"
   exit 1
 fi
 
 if [ ! -d "source/foonerd-dab-scanner" ]; then
-  echo "[!] Source not found: source/foonerd-dab-scanner"
-  echo "[!] Cherry-pick source files first"
+  echo "Error: source/foonerd-dab-scanner not found"
   exit 1
 fi
 
-# Build all architectures
-ARCHS="armv6 armhf arm64 amd64"
+# Build for all architectures
+ARCHITECTURES=("armv6" "armhf" "arm64" "amd64")
 
-for ARCH in $ARCHS; do
-  echo "[+] Building for: $ARCH"
-  ./docker/run-docker-dab.sh dab $ARCH $VERBOSE
+for ARCH in "${ARCHITECTURES[@]}"; do
   echo ""
+  echo "----------------------------------------"
+  echo "Building for: $ARCH"
+  echo "----------------------------------------"
+  ./docker/run-docker-dab.sh dab $ARCH $RTLSDR_SOURCE $VERBOSE
 done
 
+echo ""
 echo "========================================"
-echo "Build matrix complete"
+echo "Build Matrix Complete"
 echo "========================================"
 echo ""
-echo "Output binaries:"
-for ARCH in $ARCHS; do
-  echo "  out/$ARCH/"
-  if [ -f "out/$ARCH/fn-dab" ]; then
-    SIZE=$(stat -f%z "out/$ARCH/fn-dab" 2>/dev/null || stat -c%s "out/$ARCH/fn-dab" 2>/dev/null || echo "?")
-    echo "    fn-dab ($SIZE bytes)"
-  fi
-  if [ -f "out/$ARCH/fn-dab-scanner" ]; then
-    SIZE=$(stat -f%z "out/$ARCH/fn-dab-scanner" 2>/dev/null || stat -c%s "out/$ARCH/fn-dab-scanner" 2>/dev/null || echo "?")
-    echo "    fn-dab-scanner ($SIZE bytes)"
+echo "Output structure:"
+for ARCH in "${ARCHITECTURES[@]}"; do
+  if [ -d "out/$ARCH" ]; then
+    echo "  out/$ARCH/"
+    ls -lh "out/$ARCH/" | tail -n +2 | awk '{printf "    %s  %s\n", $9, $5}'
   fi
 done
+
 echo ""
+echo "Binaries: fn-dab, fn-dab-scanner"
+echo "RTL-SDR: ${RTLSDR_SOURCE#*=}"

@@ -15,7 +15,6 @@ RUN apt-get update && apt-get install -y \
     mesa-common-dev \
     libgl1-mesa-dev \
     libsamplerate0-dev \
-    librtlsdr-dev \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /build

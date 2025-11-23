@@ -29,25 +29,71 @@ fooNerd custom build of DAB/DAB+ decoder with PCM format detection and metadata 
 - **arm64** - Raspberry Pi 3, Pi 4, Pi 5 (64-bit)
 - **amd64** - x86/x64 systems
 
-## Build Requirements
+## Build Instructions
 
-- Docker with buildx support
-- bash
-- 20GB free disk space
+### Prerequisites
 
-## Quick Start
-
-Build all architectures:
+1. Clone required repositories as siblings:
 ```bash
-./build-matrix.sh --verbose
+cd ~/projects
+git clone https://github.com/foonerd/rtlsdr-osmocom.git
+# OR
+git clone https://github.com/foonerd/rtlsdr-blog.git
+
+git clone https://github.com/foonerd/foonerd-dab.git
 ```
 
-Build specific architecture:
+2. Build RTL-SDR library DEBs first:
 ```bash
-./docker/run-docker-dab.sh dab armv6 --verbose
+cd rtlsdr-osmocom  # or rtlsdr-blog
+./build-matrix.sh
 ```
 
-Clean all build artifacts:
+3. Verify DEBs exist:
+```bash
+ls out/*/
+# Should show libfn-rtlsdr0_*.deb, libfn-rtlsdr-dev_*.deb, foonerd-rtlsdr_*.deb
+```
+
+### Build All Architectures
+
+```bash
+cd foonerd-dab
+./build-matrix.sh --rtlsdr=osmocom
+```
+
+Or for rtlsdr-blog variant:
+```bash
+./build-matrix.sh --rtlsdr=blog
+```
+
+### Build Single Architecture
+
+```bash
+./docker/run-docker-dab.sh dab arm64 --rtlsdr=osmocom
+./docker/run-docker-dab.sh dab armv6 --rtlsdr=blog --verbose
+```
+
+### Clean Build Artifacts
+
+```bash
+./clean-all.sh
+```
+
+## RTL-SDR Source Selection
+
+The `--rtlsdr` flag selects which RTL-SDR library variant to link against:
+
+- `--rtlsdr=osmocom` - Uses osmocom/rtl-sdr (works with FM + DAB V3 dongles)
+- `--rtlsdr=blog` - Uses rtlsdr-blog variant (experimental, for testing V4 dongles)
+
+**CRITICAL:** You must build the corresponding RTL-SDR library DEBs BEFORE building foonerd-dab.
+
+The build system:
+1. Locates the sibling `rtlsdr-<source>` repository
+2. Mounts the DEBs from `rtlsdr-<source>/out/<arch>/`
+3. Installs them in the build container
+4. Links fn-dab against the installed library
 ```bash
 ./clean-all.sh
 ```
@@ -157,13 +203,21 @@ Clean source tree allows:
 - libsndfile1-dev, libfftw3-dev, portaudio19-dev
 - libfaad-dev, zlib1g-dev, libusb-1.0-0-dev
 - mesa-common-dev, libgl1-mesa-dev, libsamplerate0-dev
-- librtlsdr-dev
+
+**CRITICAL:** Custom RTL-SDR library (libfn-rtlsdr0, libfn-rtlsdr-dev) MUST be installed at build time via mounted DEBs from rtlsdr-osmocom or rtlsdr-blog repository. System librtlsdr-dev will NOT work.
+
+The build system explicitly requires:
+- pkg-config module: libfn-rtlsdr (not librtlsdr)
+- library name: libfn-rtlsdr.so (not librtlsdr.so)
+
+This ensures binaries link against the correct custom library and prevents conflicts with system RTL-SDR packages.
 
 ### Runtime (target system)
-- libfn-rtlsdr0 (from foonerd-rtlsdr package)
+- libfn-rtlsdr0 (from rtlsdr-osmocom or rtlsdr-blog)
 - libfftw3-3
 - libsamplerate0
 - libfaad2
+- libusb-1.0-0
 
 ## Related Projects
 

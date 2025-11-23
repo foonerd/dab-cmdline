@@ -1,7 +1,8 @@
 # volumio-rtlsdr-binaries .gitignore
 
 # Source directory (cloned during build)
-source/
+source/rtlsdr-osmocom
+source/rtlsdr-blog
 
 # Build artifacts
 build/
