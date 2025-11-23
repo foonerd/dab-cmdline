@@ -1,0 +1,22 @@
+FROM arm64v8/debian:bookworm
+
+RUN apt-get update && apt-get install -y \
+    git \
+    cmake \
+    build-essential \
+    g++ \
+    pkg-config \
+    libsndfile1-dev \
+    libfftw3-dev \
+    libfftw3-single3 \
+    portaudio19-dev \
+    libfaad-dev \
+    zlib1g-dev \
+    libusb-1.0-0-dev \
+    mesa-common-dev \
+    libgl1-mesa-dev \
+    libsamplerate0-dev \
+    librtlsdr-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /build

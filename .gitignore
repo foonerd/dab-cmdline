@@ -1,0 +1,31 @@
+# volumio-rtlsdr-binaries .gitignore
+
+# Source directory (cloned during build)
+source/
+
+# Build artifacts
+build/
+
+# Output binaries (generated during build)
+out/armv6/dab-rtlsdr-3
+out/armv6/dab-scanner-3
+out/armhf/dab-rtlsdr-3
+out/armhf/dab-scanner-3
+out/arm64/dab-rtlsdr-3
+out/arm64/dab-scanner-3
+out/amd64/dab-rtlsdr-3
+out/amd64/dab-scanner-3
+
+# Docker build cache
+.docker-cache/
+
+# Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
