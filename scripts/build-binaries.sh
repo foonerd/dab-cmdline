@@ -56,33 +56,46 @@ if [[ "$ARCH" == "arm64" ]]; then
   # arm64 needs explicit library paths due to broken FindModule
   cmake /build/source/foonerd-dab \
     -DCMAKE_BUILD_TYPE=Release \
+    -DCMAKE_SYSTEM_NAME=Linux \
     -DCMAKE_SYSTEM_PROCESSOR="$PROCESSOR" \
-    -DCMAKE_CXX_FLAGS="$EXTRA_CXXFLAGS" \
-    -DRTLSDR_INCLUDE_DIR=/usr/include \
-    -DRTLSDR_LIBRARY=/usr/lib/aarch64-linux-gnu/libfn-rtlsdr.so \
+    -DCMAKE_C_COMPILER=/usr/bin/gcc \
+    -DCMAKE_CXX_COMPILER=/usr/bin/g++ \
+    -DRTLSDR=ON \
     -DFFTW3F_INCLUDE_DIR=/usr/include \
-    -DFFTW3F_LIBRARY=/usr/lib/aarch64-linux-gnu/libfftw3f.so \
+    -DFFTW3F_LIBRARIES=/usr/lib/aarch64-linux-gnu/libfftw3f.so \
     -DFAAD_INCLUDE_DIR=/usr/include \
     -DFAAD_LIBRARY=/usr/lib/aarch64-linux-gnu/libfaad.so \
-    -DSAMPLERATE_INCLUDE_DIR=/usr/include \
-    -DSAMPLERATE_LIBRARY=/usr/lib/aarch64-linux-gnu/libsamplerate.so \
+    -DLIBSAMPLERATE_INCLUDE_DIR=/usr/include \
+    -DLIBSAMPLERATE_LIBRARY=/usr/lib/aarch64-linux-gnu/libsamplerate.so \
+    -DPORTAUDIO_INCLUDE_DIR=/usr/include \
+    -DPORTAUDIO_LIBRARIES=/usr/lib/aarch64-linux-gnu/libportaudio.so \
+    -DRTLSDR_INCLUDE_DIR=/usr/include \
+    -DRTLSDR_LIBRARY=/usr/lib/aarch64-linux-gnu/libfn-rtlsdr.so \
+    -DRTLSDR_LIBRARIES=/usr/lib/aarch64-linux-gnu/libfn-rtlsdr.so \
+    -DLIBRTLSDR_INCLUDE_DIR=/usr/include \
+    -DLIBRTLSDR_LIBRARY=/usr/lib/aarch64-linux-gnu/libfn-rtlsdr.so \
+    -DLIBRTLSDR_LIBRARIES=/usr/lib/aarch64-linux-gnu/libfn-rtlsdr.so \
+    -DLIBSNDFILE_INCLUDE_DIR=/usr/include \
+    -DLIBSNDFILE_LIBRARY=/usr/lib/aarch64-linux-gnu/libsndfile.so \
     -DSNDFILE_INCLUDE_DIR=/usr/include \
     -DSNDFILE_LIBRARY=/usr/lib/aarch64-linux-gnu/libsndfile.so \
-    -DUSB_INCLUDE_DIR=/usr/include \
-    -DUSB_LIBRARY=/usr/lib/aarch64-linux-gnu/libusb-1.0.so \
-    -DPORTAUDIO_INCLUDE_DIR=/usr/include \
-    -DPORTAUDIO_LIBRARY=/usr/lib/aarch64-linux-gnu/libportaudio.so
+    -DZLIB_INCLUDE_DIR=/usr/include \
+    -DZLIB_LIBRARY=/usr/lib/aarch64-linux-gnu/libz.so
 else
   # Other architectures use standard CMake
   cmake /build/source/foonerd-dab \
     -DCMAKE_BUILD_TYPE=Release \
+    -DCMAKE_SYSTEM_NAME=Linux \
     -DCMAKE_SYSTEM_PROCESSOR="$PROCESSOR" \
-    -DCMAKE_CXX_FLAGS="$EXTRA_CXXFLAGS"
+    -DCMAKE_C_COMPILER=/usr/bin/gcc \
+    -DCMAKE_CXX_COMPILER=/usr/bin/g++ \
+    -DCMAKE_CXX_FLAGS="$EXTRA_CXXFLAGS" \
+    -DRTLSDR=ON
 fi
 
 make -j$(nproc)
-strip fn-dab-rtlsdr
-mv fn-dab-rtlsdr "$OUTPUT/fn-dab"
+strip dab-rtlsdr-3
+mv dab-rtlsdr-3 "$OUTPUT/fn-dab"
 
 echo "[+] fn-dab built: $(ls -lh $OUTPUT/fn-dab | awk '{print $5}')"
 
@@ -95,24 +108,41 @@ cd "$BUILD_SCANNER"
 if [[ "$ARCH" == "arm64" ]]; then
   cmake /build/source/foonerd-dab-scanner \
     -DCMAKE_BUILD_TYPE=Release \
+    -DCMAKE_SYSTEM_NAME=Linux \
     -DCMAKE_SYSTEM_PROCESSOR="$PROCESSOR" \
-    -DCMAKE_CXX_FLAGS="$EXTRA_CXXFLAGS" \
+    -DCMAKE_C_COMPILER=/usr/bin/gcc \
+    -DCMAKE_CXX_COMPILER=/usr/bin/g++ \
+    -DRTLSDR=ON \
+    -DFFTW3F_INCLUDE_DIR=/usr/include \
+    -DFFTW3F_LIBRARIES=/usr/lib/aarch64-linux-gnu/libfftw3f.so \
+    -DFAAD_INCLUDE_DIR=/usr/include \
+    -DFAAD_LIBRARY=/usr/lib/aarch64-linux-gnu/libfaad.so \
     -DRTLSDR_INCLUDE_DIR=/usr/include \
     -DRTLSDR_LIBRARY=/usr/lib/aarch64-linux-gnu/libfn-rtlsdr.so \
-    -DFFTW3F_INCLUDE_DIR=/usr/include \
-    -DFFTW3F_LIBRARY=/usr/lib/aarch64-linux-gnu/libfftw3f.so \
-    -DUSB_INCLUDE_DIR=/usr/include \
-    -DUSB_LIBRARY=/usr/lib/aarch64-linux-gnu/libusb-1.0.so
+    -DRTLSDR_LIBRARIES=/usr/lib/aarch64-linux-gnu/libfn-rtlsdr.so \
+    -DLIBRTLSDR_INCLUDE_DIR=/usr/include \
+    -DLIBRTLSDR_LIBRARY=/usr/lib/aarch64-linux-gnu/libfn-rtlsdr.so \
+    -DLIBRTLSDR_LIBRARIES=/usr/lib/aarch64-linux-gnu/libfn-rtlsdr.so \
+    -DLIBSNDFILE_INCLUDE_DIR=/usr/include \
+    -DLIBSNDFILE_LIBRARY=/usr/lib/aarch64-linux-gnu/libsndfile.so \
+    -DSNDFILE_INCLUDE_DIR=/usr/include \
+    -DSNDFILE_LIBRARY=/usr/lib/aarch64-linux-gnu/libsndfile.so \
+    -DZLIB_INCLUDE_DIR=/usr/include \
+    -DZLIB_LIBRARY=/usr/lib/aarch64-linux-gnu/libz.so
 else
   cmake /build/source/foonerd-dab-scanner \
     -DCMAKE_BUILD_TYPE=Release \
+    -DCMAKE_SYSTEM_NAME=Linux \
     -DCMAKE_SYSTEM_PROCESSOR="$PROCESSOR" \
-    -DCMAKE_CXX_FLAGS="$EXTRA_CXXFLAGS"
+    -DCMAKE_C_COMPILER=/usr/bin/gcc \
+    -DCMAKE_CXX_COMPILER=/usr/bin/g++ \
+    -DCMAKE_CXX_FLAGS="$EXTRA_CXXFLAGS" \
+    -DRTLSDR=ON
 fi
 
 make -j$(nproc)
-strip fn-dab-scanner
-mv fn-dab-scanner "$OUTPUT/fn-dab-scanner"
+strip dab-scanner-rtlsdr
+mv dab-scanner-rtlsdr "$OUTPUT/fn-dab-scanner"
 
 echo "[+] fn-dab-scanner built: $(ls -lh $OUTPUT/fn-dab-scanner | awk '{print $5}')"
 

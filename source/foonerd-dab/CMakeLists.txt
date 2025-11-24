@@ -1,11 +1,11 @@
 cmake_minimum_required( VERSION 3.5 )
-set (objectName fn-dab-rtlsdr)
+set (objectName dab_cmdline-3)
 #set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -std=c++11 -flto")
 #set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -flto")
 #set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -std=c++11 -O3 -pg")
 #set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -pg")
-set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -std=c++11 -O2")
-set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS}")
+set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -std=c++11 ")
+set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ")
 if (CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
     set (CMAKE_INSTALL_PREFIX "/usr/local/bin" CACHE PATH "default install path" FORCE )
 endif()
@@ -193,16 +193,16 @@ endif ()
 
 	if (RTL_TCP)
 	   include_directories (
-	     ../devices/rtl_tcp
+	     ./devices/rtl_tcp
 	   )
 	   set ($(objectName)_HDRS
 	        ${${objectName}_HDRS}
-	        ../devices/rtl_tcp/rtl_tcp-client.h
+	        ./devices/rtl_tcp/rtl_tcp-client.h
            )
 
 	   set (${objectName}_SRCS
 	        ${${objectName}_SRCS}
-	        ../devices/rtl_tcp/rtl_tcp-client.cpp
+	        ./devices/rtl_tcp/rtl_tcp-client.cpp
 	   )
 
 	 add_definitions (-DHAVE_RTL_TCP)
@@ -224,17 +224,17 @@ endif ()
            endif(NOT(SDRPLAYLIB))
 
 	   include_directories (
-	     ../devices/sdrplay-handler
+	     ./devices/sdrplay-handler
 	   )
 
 	   set ($(objectName)_HDRS
 	        ${${objectName}_HDRS}
-	        ../devices/sdrplay-handler/sdrplay-handler.h
+	        ./devices/sdrplay-handler/sdrplay-handler.h
            )
 
 	   set (${objectName}_SRCS
 	        ${${objectName}_SRCS}
-	        ../devices/sdrplay-handler/sdrplay-handler.cpp
+	        ./devices/sdrplay-handler/sdrplay-handler.cpp
 	   )
 
 	 add_definitions (-DHAVE_SDRPLAY)
@@ -256,17 +256,17 @@ endif ()
            endif(NOT(SDRPLAYLIB))
 
 	   include_directories (
-	     ../devices/sdrplay-handler-v3
+	     ./devices/sdrplay-handler-v3
 	   )
 
 	   set ($(objectName)_HDRS
 	        ${${objectName}_HDRS}
-	        ../devices/sdrplay-handler-v3/sdrplay-handler-v3.h
+	        ./devices/sdrplay-handler-v3/sdrplay-handler-v3.h
            )
 
 	   set (${objectName}_SRCS
 	        ${${objectName}_SRCS}
-	        ../devices/sdrplay-handler-v3/sdrplay-handler-v3.cpp
+	        ./devices/sdrplay-handler-v3/sdrplay-handler-v3.cpp
 	   )
 
 	   add_definitions (-DHAVE_SDRPLAY_V3)
@@ -281,19 +281,19 @@ endif ()
            endif(NOT(LIMELIB))
 
 	   include_directories (
-	     ../devices/lime-handler
+	     ./devices/lime-handler
 	   )
 
 	   set ($(objectName)_HDRS
 	        ${${objectName}_HDRS}
-	        ../devices/lime-handler/LMS7002M_parameters.h
-	        ../devices/lime-handler/LimeSuite.h
-	        ../devices/lime-handler/lime-handler.h
+	        ./devices/lime-handler/LMS7002M_parameters.h
+	        ./devices/lime-handler/LimeSuite.h
+	        ./devices/lime-handler/lime-handler.h
            )
 
 	   set (${objectName}_SRCS
 	        ${${objectName}_SRCS}
-	        ../devices/lime-handler/lime-handler.cpp
+	        ./devices/lime-handler/lime-handler.cpp
 	   )
 
 	 add_definitions (-DHAVE_LIME)
@@ -308,18 +308,18 @@ endif ()
            endif(NOT(PLUTOLIB))
 
 	   include_directories (
-	     ../devices/pluto
+	     ./devices/pluto
 	   )
 
 	   set ($(objectName)_HDRS
 	        ${${objectName}_HDRS}
-	        ../devices/pluto/dabFilter.h
-	        ../devices/pluto/pluto-handler.h
+	        ./devices/pluto/dabFilter.h
+	        ./devices/pluto/pluto-handler.h
            )
 
 	   set (${objectName}_SRCS
 	        ${${objectName}_SRCS}
-	        ../devices/pluto/pluto-handler.cpp
+	        ./devices/pluto/pluto-handler.cpp
 	   )
 
 	 add_definitions (-DHAVE_PLUTO)
@@ -333,17 +333,17 @@ endif ()
 	   ### include_directories (${AIRSPYLIB_INCLUDE_DIR})
 
 	   include_directories (
-	     ../devices/airspy-handler
+	     ./devices/airspy-handler
 	   )
 
 	   set ($(objectName)_HDRS
 	        ${${objectName}_HDRS}
-	        ../devices/airspy-handler/airspy-handler.h
+	        ./devices/airspy-handler/airspy-handler.h
 	   )
 
 	   set (${objectName}_SRCS
 	        ${${objectName}_SRCS}
-	        ../devices/airspy-handler/airspy-handler.cpp
+	        ./devices/airspy-handler/airspy-handler.cpp
 	   )
 
 	   add_definitions (-DHAVE_AIRSPY)
@@ -358,17 +358,17 @@ endif ()
 	   ###include_directories (${RTLSDR_INCLUDE_DIR})
 
 	   include_directories (
-	        ../devices/rtlsdr-handler/
+	        ./devices/rtlsdr-handler/
 	   )
 
 	   set (${objectName}_HDRS
 	        ${${objectName}_HDRS}
-	        ../devices/rtlsdr-handler/rtlsdr-handler.h
+	        ./devices/rtlsdr-handler/rtlsdr-handler.h
 	   )
 
 	   set (${objectName}_SRCS
 	        ${${objectName}_SRCS}
-	        ../devices/rtlsdr-handler/rtlsdr-handler.cpp
+	        ./devices/rtlsdr-handler/rtlsdr-handler.cpp
 	   )
 
 	   add_definitions (-DHAVE_RTLSDR)
@@ -378,7 +378,7 @@ endif ()
 	   find_path (HACKLIB_INCLUDE_DIR
                       NAMES hackrf.h
                       PATHS
-	              ../devices/hackrf-handler/libhackrf/
+	              ./devices/hackrf-handler/libhackrf/
                        /usr/local/include/
 	   )
            include_directories (${HACKLIB_INCLUDE_DIR})
@@ -391,17 +391,17 @@ endif ()
            endif(NOT(HACKLIB))
 
 	   include_directories (
-	     ../devices/hackrf-handler
+	     ./devices/hackrf-handler
 	   )
 
 	   set ($(objectName)_HDRS
 	        ${${objectName}_HDRS}
-	        ../devices/hackrf-handler/hackrf-handler.h
+	        ./devices/hackrf-handler/hackrf-handler.h
            )
 
 	   set (${objectName}_SRCS
 	        ${${objectName}_SRCS}
-	        ../devices/hackrf-handler/hackrf-handler.cpp
+	        ./devices/hackrf-handler/hackrf-handler.cpp
 	   )
 
 	 add_definitions (-DHAVE_HACKRF)
@@ -421,6 +421,7 @@ endif ()
 	list(APPEND extraLibs ${ZLIB_LIBRARY})
 
 	find_library (PTHREADS pthread)
+	set(PTHREADS "pthread")
 	if (NOT(PTHREADS))
 	   message (FATAL_ERROR "please install libpthread")
 	else (NOT(PTHREADS))
@@ -429,34 +430,34 @@ endif ()
 
 	if (WAVFILES)
 	   include_directories (
-	        ../devices/wavfiles/
+	        ./devices/wavfiles/
 	   )
 
 	   set (${objectName}_HDRS
 	        ${${objectName}_HDRS}
-	        ../devices/wavfiles/wavfiles.h
+	        ./devices/wavfiles/wavfiles.h
 	   )
 
 	   set (${objectName}_SRCS
 	        ${${objectName}_SRCS}
-	        ../devices/wavfiles/wavfiles.cpp
+	        ./devices/wavfiles/wavfiles.cpp
 	   )
 	   add_definitions (-DHAVE_WAVFILES)
 	endif()
 
 	if (RAWFILES)
 	   include_directories (
-	        ../devices/rawfiles/
+	        ./devices/rawfiles/
 	   )
 
 	   set (${objectName}_HDRS
 	        ${${objectName}_HDRS}
-	        ../devices/rawfiles/rawfiles.h
+	        ./devices/rawfiles/rawfiles.h
 	   )
 
 	   set (${objectName}_SRCS
 	        ${${objectName}_SRCS}
-	        ../devices/rawfiles/rawfiles.cpp
+	        ./devices/rawfiles/rawfiles.cpp
 	   )
 
 	   add_definitions (-DHAVE_RAWFILES)
@@ -464,23 +465,23 @@ endif ()
 
 	if (XMLFILES)
 	   include_directories (
-	     ../devices/xml-filereader
+	     ./devices/xml-filereader
 	   )
 
 	   set ($(objectName)_HDRS
 	        ${${objectName}_HDRS}
-	        ../devices/xml-filereader/rapidxml.hpp
-	        ../devices/xml-filereader/xml-filereader.h
-	        ../devices/xml-filereader/xmlreader.h
-	        ../devices/xml-filereader/element-reader.h
-	        ../devices/xml-filereader/xml-descriptor.h
+	        ./devices/xml-filereader/rapidxml.hpp
+	        ./devices/xml-filereader/xml-filereader.h
+	        ./devices/xml-filereader/xmlreader.h
+	        ./devices/xml-filereader/element-reader.h
+	        ./devices/xml-filereader/xml-descriptor.h
 	   )
 
 	   set (${objectName}_SRCS
 	        ${${objectName}_SRCS}
-	        ../devices/xml-filereader/xml-filereader.cpp
-	        ../devices/xml-filereader/xml-reader.cpp
-	        ../devices/xml-filereader/xml-descriptor.cpp
+	        ./devices/xml-filereader/xml-filereader.cpp
+	        ./devices/xml-filereader/xml-reader.cpp
+	        ./devices/xml-filereader/xml-descriptor.cpp
 	   )
 
 	   add_definitions (-DHAVE_XMLFILES)
@@ -495,18 +496,18 @@ endif ()
 	           .
 	           ./
 	           ./server-thread
-	           ../devices
-	           ../
-	           ../library
-	           ../library/includes
-	           ../library/includes/ofdm
-	           ../library/includes/backend
-	           ../library/includes/backend/audio
-	           ../library/includes/backend/data
-	           ../library/includes/backend/data/mot
-	           ../library/includes/backend/data/journaline
-	           ../library/includes/support
-	           ../library/includes/support/viterbi-spiral
+	           ./devices
+	           ./
+	           ./library
+	           ./library/includes
+	           ./library/includes/ofdm
+	           ./library/includes/backend
+	           ./library/includes/backend/audio
+	           ./library/includes/backend/data
+	           ./library/includes/backend/data/mot
+	           ./library/includes/backend/data/journaline
+	           ./library/includes/support
+	           ./library/includes/support/viterbi-spiral
 	           /usr/include/
 	)
 
@@ -514,122 +515,122 @@ endif ()
 	     ${${objectName}_HDRS}
 	     ./ringbuffer.h
 	     ./server-thread/tcp-server.h
-	     ../dab-api.h
-	     ../devices/device-handler.h
-	     ../devices/device-exceptions.h
-	     ../library/includes/dab-constants.h
-	     ../library/includes/dab-processor.h
-	     ../library/includes/bit-extractors.h
-	     ../library/includes/time-converter.h
-	     ../library/includes/ofdm/phasereference.h
-	     ../library/includes/ofdm/phasetable.h
-	     ../library/includes/ofdm/freq-interleaver.h
-	     ../library/includes/ofdm/timesyncer.h
-	     ../library/includes/ofdm/fic-handler.h
-	     ../library/includes/ofdm/fib-table.h
-	     ../library/includes/ofdm/ensemble.h
-	     ../library/includes/ofdm/fib-config.h
-	     ../library/includes/ofdm/fib-decoder.h
-	     ../library/includes/ofdm/sample-reader.h
-	     ../library/includes/ofdm/tii-detector.h
-	     ../library/includes/backend/firecode-checker.h
-	     ../library/includes/backend/backend-base.h
-	     ../library/includes/backend/galois.h
-	     ../library/includes/backend/reed-solomon.h
-	     ../library/includes/backend/msc-handler.h
-	     ../library/includes/backend/virtual-backend.h
-	     ../library/includes/backend/audio-backend.h
-	     ../library/includes/backend/data-backend.h
-	     ../library/includes/backend/audio/faad-decoder.h
-	     ../library/includes/backend/audio/mp4processor.h 
-	     ../library/includes/backend/audio/mp2processor.h 
-	     ../library/includes/backend/data/virtual-datahandler.h 
-	     ../library/includes/backend/data/tdc-datahandler.h 
-	     ../library/includes/backend/data/pad-handler.h 
-	     ../library/includes/backend/data/mot/mot-handler.h 
-	     ../library/includes/backend/data/mot/mot-dir.h 
-	     ../library/includes/backend/data/mot/mot-object.h 
-	     ../library/includes/backend/data/data-processor.h
-	     ../library/includes/support/band-handler.h
-	     ../library/includes/support/charsets.h
-#	     ../library/includes/support/viterbi-handler.h
-	     ../library/includes/support/protTables.h
-	     ../library/includes/support/protection.h
-	     ../library/includes/support/uep-protection.h
-	     ../library/includes/support/eep-protection.h
-	     ../library/includes/support/fft-handler.h
-	     ../library/includes/support/dab-params.h
-#	     ../library/includes/support/tii_table.h
-	     ../library/includes/support/viterbi-spiral/viterbi-spiral.h
+	     ./dab-api.h
+	     ./devices/device-handler.h
+	     ./devices/device-exceptions.h
+	     ./library/includes/dab-constants.h
+	     ./library/includes/dab-processor.h
+	     ./library/includes/bit-extractors.h
+	     ./library/includes/time-converter.h
+	     ./library/includes/ofdm/phasereference.h
+	     ./library/includes/ofdm/phasetable.h
+	     ./library/includes/ofdm/freq-interleaver.h
+	     ./library/includes/ofdm/timesyncer.h
+	     ./library/includes/ofdm/fic-handler.h
+	     ./library/includes/ofdm/fib-table.h
+	     ./library/includes/ofdm/ensemble.h
+	     ./library/includes/ofdm/fib-config.h
+	     ./library/includes/ofdm/fib-decoder.h
+	     ./library/includes/ofdm/sample-reader.h
+	     ./library/includes/ofdm/tii-detector.h
+	     ./library/includes/backend/firecode-checker.h
+	     ./library/includes/backend/backend-base.h
+	     ./library/includes/backend/galois.h
+	     ./library/includes/backend/reed-solomon.h
+	     ./library/includes/backend/msc-handler.h
+	     ./library/includes/backend/virtual-backend.h
+	     ./library/includes/backend/audio-backend.h
+	     ./library/includes/backend/data-backend.h
+	     ./library/includes/backend/audio/faad-decoder.h
+	     ./library/includes/backend/audio/mp4processor.h 
+	     ./library/includes/backend/audio/mp2processor.h 
+	     ./library/includes/backend/data/virtual-datahandler.h 
+	     ./library/includes/backend/data/tdc-datahandler.h 
+	     ./library/includes/backend/data/pad-handler.h 
+	     ./library/includes/backend/data/mot/mot-handler.h 
+	     ./library/includes/backend/data/mot/mot-dir.h 
+	     ./library/includes/backend/data/mot/mot-object.h 
+	     ./library/includes/backend/data/data-processor.h
+	     ./library/includes/support/band-handler.h
+	     ./library/includes/support/charsets.h
+#	     ./library/includes/support/viterbi-handler.h
+	     ./library/includes/support/protTables.h
+	     ./library/includes/support/protection.h
+	     ./library/includes/support/uep-protection.h
+	     ./library/includes/support/eep-protection.h
+	     ./library/includes/support/fft-handler.h
+	     ./library/includes/support/dab-params.h
+#	     ./library/includes/support/tii_table.h
+	     ./library/includes/support/viterbi-spiral/viterbi-spiral.h
 	)
 
 	set (${objectName}_SRCS
 	     ${${objectName}_SRCS}
 	     ./main.cpp
 	     ./server-thread/tcp-server.cpp
-	     ../devices/device-handler.cpp
-	     ../library/dab-api.cpp
-	     ../library/src/dab-processor.cpp
-	     ../library/src/time-converter.cpp
-	     ../library/src/ofdm/ofdm-decoder.cpp
-	     ../library/src/ofdm/phasereference.cpp
-	     ../library/src/ofdm/phasetable.cpp
-	     ../library/src/ofdm/freq-interleaver.cpp
-	     ../library/src/ofdm/timesyncer.cpp
-	     ../library/src/ofdm/sample-reader.cpp
-	     ../library/src/ofdm/fic-handler.cpp
-	     ../library/src/ofdm/ensemble.cpp
-	     ../library/src/ofdm/fib-config.cpp
-	     ../library/src/ofdm/fib-decoder.cpp
-	     ../library/src/ofdm/tii-detector.cpp
-	     ../library/src/backend/firecode-checker.cpp
-	     ../library/src/backend/backend-base.cpp
-	     ../library/src/backend/galois.cpp
-	     ../library/src/backend/reed-solomon.cpp
-	     ../library/src/backend/msc-handler.cpp
-	     ../library/src/backend/virtual-backend.cpp
-	     ../library/src/backend/audio-backend.cpp
-	     ../library/src/backend/data-backend.cpp
-	     ../library/src/backend/audio/mp4processor.cpp 
-	     ../library/src/backend/audio/mp2processor.cpp 
-	     ../library/src/backend/data/virtual-datahandler.cpp 
-	     ../library/src/backend/data/tdc-datahandler.cpp 
-	     ../library/src/backend/data/pad-handler.cpp 
-	     ../library/src/backend/data/mot/mot-handler.cpp 
-	     ../library/src/backend/data/mot/mot-dir.cpp 
-	     ../library/src/backend/data/mot/mot-object.cpp 
-	     ../library/src/backend/data/data-processor.cpp
-	     ../library/src/support/band-handler.cpp
-	     ../library/src/support/charsets.cpp
-#	     ../library/src/support/viterbi-handler.cpp
-	     ../library/src/support/protTables.cpp
-	     ../library/src/support/protection.cpp
-	     ../library/src/support/eep-protection.cpp
-	     ../library/src/support/uep-protection.cpp
-	     ../library/src/support/fft-handler.cpp
-	     ../library/src/support/dab-params.cpp
-#	     ../library/src/support/tii_table.cpp
-	     ../library/src/support/viterbi-spiral/viterbi-spiral.cpp
+	     ./devices/device-handler.cpp
+	     ./library/dab-api.cpp
+	     ./library/src/dab-processor.cpp
+	     ./library/src/time-converter.cpp
+	     ./library/src/ofdm/ofdm-decoder.cpp
+	     ./library/src/ofdm/phasereference.cpp
+	     ./library/src/ofdm/phasetable.cpp
+	     ./library/src/ofdm/freq-interleaver.cpp
+	     ./library/src/ofdm/timesyncer.cpp
+	     ./library/src/ofdm/sample-reader.cpp
+	     ./library/src/ofdm/fic-handler.cpp
+	     ./library/src/ofdm/ensemble.cpp
+	     ./library/src/ofdm/fib-config.cpp
+	     ./library/src/ofdm/fib-decoder.cpp
+	     ./library/src/ofdm/tii-detector.cpp
+	     ./library/src/backend/firecode-checker.cpp
+	     ./library/src/backend/backend-base.cpp
+	     ./library/src/backend/galois.cpp
+	     ./library/src/backend/reed-solomon.cpp
+	     ./library/src/backend/msc-handler.cpp
+	     ./library/src/backend/virtual-backend.cpp
+	     ./library/src/backend/audio-backend.cpp
+	     ./library/src/backend/data-backend.cpp
+	     ./library/src/backend/audio/mp4processor.cpp 
+	     ./library/src/backend/audio/mp2processor.cpp 
+	     ./library/src/backend/data/virtual-datahandler.cpp 
+	     ./library/src/backend/data/tdc-datahandler.cpp 
+	     ./library/src/backend/data/pad-handler.cpp 
+	     ./library/src/backend/data/mot/mot-handler.cpp 
+	     ./library/src/backend/data/mot/mot-dir.cpp 
+	     ./library/src/backend/data/mot/mot-object.cpp 
+	     ./library/src/backend/data/data-processor.cpp
+	     ./library/src/support/band-handler.cpp
+	     ./library/src/support/charsets.cpp
+#	     ./library/src/support/viterbi-handler.cpp
+	     ./library/src/support/protTables.cpp
+	     ./library/src/support/protection.cpp
+	     ./library/src/support/eep-protection.cpp
+	     ./library/src/support/uep-protection.cpp
+	     ./library/src/support/fft-handler.cpp
+	     ./library/src/support/dab-params.cpp
+#	     ./library/src/support/tii_table.cpp
+	     ./library/src/support/viterbi-spiral/viterbi-spiral.cpp
 	)
 
 	if (X64_DEFINED)
            set (${objectName}_SRCS
                 ${${objectName}_SRCS}
-              ../library/src/support/viterbi-spiral/spiral-sse.c
+              ./library/src/support/viterbi-spiral/spiral-sse.c
            )
            set (${objectName}_HDRS
                 ${${objectName}_HDRS}
-             ../library/src/support/viterbi-spiral/spiral-sse.h
+             ./library/src/support/viterbi-spiral/spiral-sse.h
            )
            add_definitions (-DSSE_AVAILABLE)
         elseif (RPI_DEFINED)
            set (${objectName}_SRCS
                 ${${objectName}_SRCS}
-              ../library/src/support/viterbi-spiral/spiral-neon.c
+              ./library/src/support/viterbi-spiral/spiral-neon.c
            )
            set (${objectName}_HDRS
                 ${${objectName}_HDRS}
-             ../library/src/support/viterbi-spiral/spiral-neon.h
+             ./library/src/support/viterbi-spiral/spiral-neon.h
            )
            add_definitions (-DNEON_AVAILABLE)
 	# compiler options moved below add_executable .. and target specific
@@ -638,11 +639,11 @@ endif ()
         else (X64_DEFINED)
            set (${objectName}_SRCS
                 ${${objectName}_SRCS}
-              ../library/src/support/viterbi-spiral/spiral-no-sse.c
+              ./library/src/support/viterbi-spiral/spiral-no-sse.c
            )
            set (${objectName}_HDRS
                 ${${objectName}_HDRS}
-             ../library/src/support/viterbi-spiral/spiral-no-sse.h
+             ./library/src/support/viterbi-spiral/spiral-no-sse.h
            )
         endif (X64_DEFINED)
 #
@@ -682,11 +683,3 @@ configure_file(
 
 add_custom_target(uninstall
     COMMAND ${CMAKE_COMMAND} -P ${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake)
-
-########################################################################
-# arm64 pthread fix
-########################################################################
-if(CMAKE_SYSTEM_PROCESSOR MATCHES "aarch64")
-  set(PTHREADS "pthread")
-endif()
-

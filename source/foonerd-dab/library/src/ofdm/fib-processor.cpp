@@ -690,11 +690,11 @@ char temp [20];
 	if (hours < 0)	hours += 24;
 	if (hours >= 24) hours -= 24;
 
-	sfprintf(stderr, temp, "%2d", hours);
+	sprintf (temp, "%2d", hours);
 	std::string hoursasString = temp;
 	result. append (hoursasString);
 	result. append (":");
-	sfprintf(stderr, temp, "%2d", dateTime [4]);
+	sprintf (temp, "%2d", dateTime [4]);
 	std::string minutesasString = temp;
 	result. append (minutesasString);
 	return result;

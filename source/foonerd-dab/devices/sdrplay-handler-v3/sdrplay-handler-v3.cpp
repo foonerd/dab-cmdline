@@ -122,7 +122,7 @@ void	StreamBCallback (short *xi, short *xq,
                          void *cbContext) {
 	(void)xi; (void)xq; (void)params; (void)cbContext;
         if (reset)
-           fprintf(stderr, "sdrplay_api_StreamBCallback: numSamples=%d\n", numSamples);
+           printf ("sdrplay_api_StreamBCallback: numSamples=%d\n", numSamples);
         return;
 }
 

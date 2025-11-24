@@ -82,7 +82,7 @@ uint32_t samplerate_count;
 	strcpy (serial,"");
 	result = this -> my_airspy_init ();
 	if (result != AIRSPY_SUCCESS) {
-	   fprintf(stderr, "my_airspy_init () failed: %s (%d)\n",
+	   printf("my_airspy_init () failed: %s (%d)\n",
 	             my_airspy_error_name((airspy_error)result), result);
 
 #ifdef __MINGW32__
@@ -96,7 +96,7 @@ uint32_t samplerate_count;
 	DEBUG_PRINT ("airspy init is done\n");
 	result = my_airspy_open (&device);
 	if (result != AIRSPY_SUCCESS) {
-	   fprintf(stderr, "my_airpsy_open () failed: %s (%d)\n",
+	   printf ("my_airpsy_open () failed: %s (%d)\n",
 	             my_airspy_error_name ((airspy_error)result), result);
 #ifdef __MINGW32__
 	   FreeLibrary (Handle);
@@ -132,7 +132,7 @@ uint32_t samplerate_count;
 
 	result = my_airspy_set_samplerate (device, selectedRate);
 	if (result != AIRSPY_SUCCESS) {
-           fprintf(stderr, "airspy_set_samplerate() failed: %s (%d)\n",
+           printf ("airspy_set_samplerate() failed: %s (%d)\n",
 	             my_airspy_error_name((enum airspy_error)result), result);
 #ifdef __MINGW32__
 	   FreeLibrary (Handle);
@@ -172,7 +172,7 @@ uint32_t samplerate_count;
 	if (device) {
 	   int result = my_airspy_stop_rx (device);
 	   if (result != AIRSPY_SUCCESS) {
-	      fprintf(stderr, "my_airspy_stop_rx () failed: %s (%d)\n",
+	      printf ("my_airspy_stop_rx () failed: %s (%d)\n",
 	             my_airspy_error_name((airspy_error)result), result);
 	   }
 
@@ -180,7 +180,7 @@ uint32_t samplerate_count;
 //	      set_rf_bias ();
 	   result = my_airspy_close (device);
 	   if (result != AIRSPY_SUCCESS) {
-	      fprintf(stderr, "airspy_close () failed: %s (%d)\n",
+	      printf ("airspy_close () failed: %s (%d)\n",
 	             my_airspy_error_name((airspy_error)result), result);
 	   }
 	}
@@ -209,13 +209,13 @@ int32_t	bufSize	= EXTIO_NS * EXTIO_BASE_TYPE_SIZE * 2;
 	this	-> frequency = frequency;
 	result = my_airspy_set_freq (device, frequency);
 	if (result != AIRSPY_SUCCESS) {
-	   fprintf(stderr, "my_airspy_set_freq() failed: %s (%d)\n",
+	   printf ("my_airspy_set_freq() failed: %s (%d)\n",
 	            my_airspy_error_name((airspy_error)result), result);
 	}
 	result = my_airspy_set_sample_type (device, AIRSPY_SAMPLE_INT16_IQ);
 //	result = my_airspy_set_sample_type (device, AIRSPY_SAMPLE_FLOAT32_IQ);
 	if (result != AIRSPY_SUCCESS) {
-	   fprintf(stderr, "my_airspy_set_sample_type () failed: %s (%d)\n",
+	   printf ("my_airspy_set_sample_type () failed: %s (%d)\n",
 	            my_airspy_error_name ((airspy_error)result), result);
 	   return false;
 	}
@@ -225,7 +225,7 @@ int32_t	bufSize	= EXTIO_NS * EXTIO_BASE_TYPE_SIZE * 2;
 	result = my_airspy_start_rx (device,
 	            (airspy_sample_block_cb_fn)callback, this);
 	if (result != AIRSPY_SUCCESS) {
-	   fprintf(stderr, "my_airspy_start_rx () failed: %s (%d)\n",
+	   printf ("my_airspy_start_rx () failed: %s (%d)\n",
 	         my_airspy_error_name((airspy_error)result), result);
 	   return false;
 	}
@@ -248,7 +248,7 @@ void	airspyHandler::stopReader (void) {
 int result = my_airspy_stop_rx (device);
 
 	if (result != AIRSPY_SUCCESS ) {
-	   fprintf(stderr, "my_airspy_stop_rx() failed: %s (%d)\n",
+	   printf ("my_airspy_stop_rx() failed: %s (%d)\n",
 	          my_airspy_error_name ((airspy_error)result), result);
 	} else {
 	   delete [] buffer;
@@ -327,11 +327,11 @@ airspy_read_partid_serialno_t read_partid_serialno;
 int result = my_airspy_board_partid_serialno_read (device,
 	                                          &read_partid_serialno);
 	if (result != AIRSPY_SUCCESS) {
-	   fprintf(stderr, "failed: %s (%d)\n",
+	   printf ("failed: %s (%d)\n",
 	         my_airspy_error_name ((airspy_error)result), result);
 	   return "UNKNOWN";
 	} else {
-	   snfprintf(stderr, serial, sizeof(serial), "%08X%08X",
+	   snprintf (serial, sizeof(serial), "%08X%08X",
 	             read_partid_serialno. serial_no [2],
 	             read_partid_serialno. serial_no [3]);
 	}
@@ -343,7 +343,7 @@ int	airspyHandler::open (void) {
 int result = my_airspy_open (&device);
 
 	if (result != AIRSPY_SUCCESS) {
-	   fprintf(stderr, "airspy_open() failed: %s (%d)\n",
+	   printf ("airspy_open() failed: %s (%d)\n",
 	          my_airspy_error_name((airspy_error)result), result);
 	   return -1;
 	} else {

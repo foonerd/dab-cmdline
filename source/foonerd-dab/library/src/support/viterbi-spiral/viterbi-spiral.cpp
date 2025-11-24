@@ -143,16 +143,16 @@ uint32_t	size;
 #else
 	if (posix_memalign ((void**)&data, 16,
 	                        (wordlength + (K - 1))/ 8 + 1)){
-	   fprintf(stderr, "Allocation of data array failed\n");
+	   printf ("Allocation of data array failed\n");
 	}
 	if (posix_memalign ((void**)&symbols, 16,
 	                     RATE * (wordlength + (K - 1)) * sizeof(COMPUTETYPE))){
-	   fprintf(stderr, "Allocation of symbols array failed\n");
+	   printf ("Allocation of symbols array failed\n");
 	}
 	if (posix_memalign ((void**)&(vp. decisions),
 	                    16,
 	                    2 * (wordlength + (K - 1)) * sizeof (decision_t))){
-	   fprintf(stderr, "Allocation of vp decisions failed\n");
+	   printf ("Allocation of vp decisions failed\n");
 	}
 #endif
 

@@ -80,7 +80,7 @@ fi
 # Platform mappings for Docker
 declare -A PLATFORM_MAP
 PLATFORM_MAP=(
-  ["armv6"]="linux/arm/v6"
+  ["armv6"]="linux/arm/v7"
   ["armhf"]="linux/arm/v7"
   ["arm64"]="linux/arm64"
   ["amd64"]="linux/amd64"
@@ -147,10 +147,12 @@ echo ""
 # Create output directory
 mkdir -p "$OUTPUT_DIR"
 
-# Special CXXFLAGS for armv6 (Pi Zero W)
+# Special CXXFLAGS for ARM architectures
 EXTRA_CXXFLAGS=""
 if [[ "$ARCH" == "armv6" ]]; then
   EXTRA_CXXFLAGS="-march=armv6 -mfpu=vfp -mfloat-abi=hard -marm"
+elif [[ "$ARCH" == "armhf" ]]; then
+  EXTRA_CXXFLAGS="-march=armv7-a -mfpu=neon-vfpv4 -mfloat-abi=hard"
 fi
 
 # Absolute path to DEBs for mounting

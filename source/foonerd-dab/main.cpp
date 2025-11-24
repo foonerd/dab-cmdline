@@ -233,13 +233,6 @@ void    timeHandler             (int hours, int minutes, void *ctx) {
 static
 void	pcmHandler (int16_t *buffer, int size, int rate,
 	                              bool isStereo, void *ctx) {
-	static int pcm_printed = 0;
-	if (pcm_printed < 5) {
-		fprintf(stderr, "PCM: rate=%d stereo=%d size=%d\n",
-		        rate, isStereo ? 1 : 0, size);
-		pcm_printed++;
-	}
-
 #ifdef	STREAMER_OUTPUT
 	if (theStreamer == NULL)
 	   return;
