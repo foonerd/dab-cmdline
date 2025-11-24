@@ -31,7 +31,7 @@ static char tmpstr[64];
 /* helper function generating channel names */
 static
 char*	get_ch_name (const char* type, int id) {
-        snprintf (tmpstr, sizeof(tmpstr), "%s%d", type, id);
+        snfprintf(stderr, tmpstr, sizeof(tmpstr), "%s%d", type, id);
         return tmpstr;
 }
 

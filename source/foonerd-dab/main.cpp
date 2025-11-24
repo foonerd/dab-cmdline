@@ -230,9 +230,16 @@ void    timeHandler             (int hours, int minutes, void *ctx) {
 //	passing by and sending additional 0 samples in case
 //	of gaps
 //
+static bool pcmFormatReported = false;
 static
 void	pcmHandler (int16_t *buffer, int size, int rate,
 	                              bool isStereo, void *ctx) {
+	// Report PCM format once to stderr for plugin detection
+	if (!pcmFormatReported) {
+		fprintf(stderr, "PCM: rate=%d stereo=%d size=%d\n", 
+		        rate, isStereo ? 1 : 0, size);
+		pcmFormatReported = true;
+	}
 #ifdef	STREAMER_OUTPUT
 	if (theStreamer == NULL)
 	   return;
