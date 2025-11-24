@@ -33,6 +33,7 @@
 
 #include	<chrono>
 #include	<ctime>
+#include	<unistd.h>
 
 #ifdef	__MINGW32__
 #define	GETPROCADDRESS	GetProcAddress
@@ -102,8 +103,14 @@ int16_t	i;
 	const char *libraryString = "rtlsdr.dll";
 	Handle		= LoadLibrary ((wchar_t *)L"rtlsdr.dll");
 #else
-	const char *libraryString = "librtlsdr.so";
-	Handle		= dlopen ("librtlsdr.so", RTLD_NOW);
+	// Use libfn-rtlsdr.so for V4 dongle support (rtlsdr-blog library)
+	// Falls back to librtlsdr.so if not found
+	const char *libraryString = "libfn-rtlsdr.so";
+	Handle		= dlopen ("libfn-rtlsdr.so", RTLD_NOW);
+	if (Handle == NULL) {
+	   libraryString = "librtlsdr.so";
+	   Handle = dlopen ("librtlsdr.so", RTLD_NOW);
+	}
 #endif
 
 	if (Handle == NULL) {
@@ -162,7 +169,6 @@ int16_t	i;
 
 	r			= this -> rtlsdr_get_sample_rate (device);
 	DEBUG_PRINT ("samplerate set to %d\n", r);
-	rtlsdr_set_tuner_gain_mode (device, 0);
 
 	gainsCount	= rtlsdr_get_tuner_gains (device, NULL);
 	DEBUG_PRINT ("Supported gain values (%d): ", gainsCount);
@@ -173,18 +179,30 @@ int16_t	i;
 	DEBUG_PRINT ("\n");
 	if (ppmCorrection != 0)
 	   rtlsdr_set_freq_correction (device, ppmCorrection);
-	if (autogain)
-	   rtlsdr_set_agc_mode (device, 1);
+
+	// V4 FIX: Set frequency with auto gain first to allow PLL lock
+	// R828D tuner needs auto gain during initial tuning
+	rtlsdr_set_tuner_gain_mode (device, 0);  // 0 = auto gain
+	rtlsdr_set_agc_mode (device, 1);         // Enable AGC for PLL lock
 	(void)(this -> rtlsdr_set_center_freq (device, frequency));
-	theGain = gain * gainsCount / 100;
-	if (theGain < 0)
-	   theGain = 0;
-	if (theGain >= gainsCount)
-	   theGain = gainsCount - 1;
-	DEBUG_PRINT ("effective gain: gain %d.%d\n",
-	                              gains [theGain] / 10,
-	                              gains [theGain] % 10);
-	rtlsdr_set_tuner_gain (device, gains [theGain]);
+	usleep(50000);  // 50ms for PLL to lock
+
+	// Now switch to manual gain if not autogain mode
+	if (!autogain) {
+	   rtlsdr_set_agc_mode (device, 0);
+	   rtlsdr_set_tuner_gain_mode (device, 1);  // 1 = manual gain
+	   theGain = gain * gainsCount / 100;
+	   if (theGain < 0)
+	      theGain = 0;
+	   if (theGain >= gainsCount)
+	      theGain = gainsCount - 1;
+	   DEBUG_PRINT ("effective gain: gain %d.%d\n",
+	                                 gains [theGain] / 10,
+	                                 gains [theGain] % 10);
+	   rtlsdr_set_tuner_gain (device, gains [theGain]);
+	} else {
+	   DEBUG_PRINT ("effective gain: auto\n");
+	}
 
 	if ( this	-> deviceOptions && rtlsdr_set_opt_string )
 		rtlsdr_set_opt_string(device, deviceOptions, 1);

@@ -220,11 +220,29 @@ void	dataOut_Handler (const char *label, void *ctx) {
 	
 	std::string strLabel = std::string(label);
 	
+	// Ignore very short labels (likely partial segments)
+	if (strLabel.length() < 10) {
+		return;
+	}
+	
 	// Deduplicate - only process if changed
 	// DAB sends DLS every 2-4 seconds even if unchanged
 	if (strLabel == lastDlsLabel) {
 		return;
 	}
+	
+	// Ignore if new label is substring of previous (partial segment)
+	if (lastDlsLabel.find(strLabel) != std::string::npos) {
+		return;
+	}
+	
+	// Ignore if previous label is substring of new (we already showed it)
+	if (strLabel.find(lastDlsLabel) != std::string::npos && lastDlsLabel.length() > 20) {
+		// But update stored label to the longer version
+		lastDlsLabel = strLabel;
+		return;
+	}
+	
 	lastDlsLabel = strLabel;
 	
 	// Write with timestamp for plugin tracking
@@ -239,8 +257,6 @@ void	dataOut_Handler (const char *label, void *ctx) {
 		fprintf (stderr, "DLS: error writing to file %s\n", strLabelfile. c_str());
 	}
 	
-	// Output for plugin parsing (backward compatible)
-	fprintf (stderr, "%s\r", label);
 	// Machine-readable format for v1.1.0 metadata
 	fprintf (stderr, "DLS: %s\n", label);
 }
@@ -319,8 +335,8 @@ void	pcmHandler (int16_t *buffer, int size, int rate,
 	}
 	
 	// Validate buffer before write
+	// Note: size=0 on first call is normal (format detection)
 	if (buffer == NULL || size <= 0) {
-		fprintf(stderr, "PCM: invalid buffer (size=%d)\n", size);
 		return;
 	}
 	
