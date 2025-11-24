@@ -14,6 +14,12 @@ fooNerd custom build of DAB/DAB+ decoder with professional-grade optimizations, 
 
 ## Version 2.0 Highlights
 
+### RTL-SDR V3 and V4 Dongle Support
+- **V3 (R820T/R860)**: Full support for FM and DAB
+- **V4 (R828D)**: Full support with PLL lock fix for DAB frequencies
+- **Library Loading**: Automatic fallback (libfn-rtlsdr.so -> librtlsdr.so)
+- **Unified Codebase**: Same binary works with both dongle generations
+
 ### Performance Optimizations
 - **CPU Usage**: 15-33% reduction across all platforms
 - **Compiler Flags**: -O3, -ffast-math, -funroll-loops, -flto (Link Time Optimization)
@@ -29,6 +35,12 @@ fooNerd custom build of DAB/DAB+ decoder with professional-grade optimizations, 
 - **Format Change Detection**: Handles sample rate switching (32kHz ↔ 48kHz)
 - **Immediate Flush**: fflush(stdout) eliminates buffering delays
 - **Distortion-Free**: All stdout contamination eliminated
+
+### Lean Output
+- **Minimal Startup**: Removed verbose copyright banners
+- **Runtime Debug**: -v flag enables verbose output (off by default)
+- **Clean Stderr**: Only essential messages during normal operation
+- **Library Messages**: RTL-SDR library messages (tuner detection) remain
 
 ### Complete Metadata Support (v1.1.0 Ready)
 - **DLS Text**: Deduplication (95% fewer disk writes), timestamps
@@ -88,6 +100,7 @@ fooNerd custom build of DAB/DAB+ decoder with professional-grade optimizations, 
 1. Clone required repositories as siblings:
 ```bash
 cd ~/projects
+# Preferred
 git clone https://github.com/foonerd/rtlsdr-osmocom.git
 # OR
 git clone https://github.com/foonerd/rtlsdr-blog.git
@@ -97,7 +110,7 @@ git clone https://github.com/foonerd/foonerd-dab.git
 
 2. Build RTL-SDR library DEBs first:
 ```bash
-cd rtlsdr-osmocom  # or rtlsdr-blog
+cd rtlsdr-osmocom
 ./build-matrix.sh
 ```
 
@@ -143,8 +156,10 @@ Build time (approximate):
 
 The `--rtlsdr` flag selects which RTL-SDR library variant to link against:
 
-- `--rtlsdr=osmocom` - Uses osmocom/rtl-sdr (works with FM + DAB V3 dongles)
-- `--rtlsdr=blog` - Uses rtlsdr-blog variant (experimental, for testing V4 dongles)
+- `--rtlsdr=osmocom` - **RECOMMENDED** - Uses osmocom/rtl-sdr (canonical upstream)
+- `--rtlsdr=blog` - Uses rtlsdr-blog variant (vendor fork with extra features)
+
+**Recommendation**: Use osmocom. Both libraries now support V3 and V4 dongles equally for FM and DAB. The blog fork adds features (HF direct sampling, L-band tweaks, bias tee hacks) not relevant to FM/DAB broadcast reception.
 
 **CRITICAL:** You must build the corresponding RTL-SDR library DEBs BEFORE building foonerd-dab.
 
@@ -182,6 +197,11 @@ Note: v2.0 binaries are slightly larger due to LTO metadata and optimization imp
 Simple playback:
 ```bash
 fn-dab -C 12C -P "BBC Radio 1" -G 80 | aplay -r 48000 -f S16_LE -c 2
+```
+
+With verbose debug output:
+```bash
+fn-dab -C 12C -P "BBC Radio 1" -G 80 -v 2>&1 | aplay -r 48000 -f S16_LE -c 2
 ```
 
 With dynamic resampling (handles 32kHz/48kHz automatically):
@@ -593,7 +613,7 @@ This build is DAB/DAB+ only. FM requires separate rtl_fm binary in plugin.
 
 ### AGC Support
 **Status**: MANUAL GAIN ONLY  
-RTL-SDR AGC disabled (hardcoded). Manual gain control works well. AGC may be added in v1.2.0 as optional feature.
+RTL-SDR AGC disabled (hardcoded). Manual gain control works well for FM and DAB reception.
 
 ### Auto-PPM Calibration
 **Status**: MANUAL CONFIGURATION  
@@ -606,6 +626,10 @@ Direct PCM output used (simpler, lower latency). Streamer code present but compi
 ## Version History
 
 ### v2.0 (November 2025) - Optimized Production Build
+- **V4 Dongle Support**: R828D PLL lock fix for DAB frequencies
+- **Library Loading**: Fallback mechanism (libfn-rtlsdr.so -> librtlsdr.so)
+- **Runtime Debug**: -v flag for verbose output (off by default)
+- **Lean Output**: Removed verbose startup banners
 - **Performance**: -O3, -ffast-math, -funroll-loops, -flto
 - **arm64**: ARMv8-a+SIMD explicit optimization (was missing)
 - **Audio**: Buffer validation, error handling, format change detection
@@ -623,7 +647,7 @@ Direct PCM output used (simpler, lower latency). Streamer code present but compi
 
 ## Related Projects
 
-- [foonerd/rtlsdr-osmocom](https://github.com/foonerd/rtlsdr-osmocom) - RTL-SDR library (osmocom source)
+- [foonerd/rtlsdr-osmocom](https://github.com/foonerd/rtlsdr-osmocom) - RTL-SDR library (recommended, canonical upstream)
 - [foonerd/rtlsdr-blog](https://github.com/foonerd/rtlsdr-blog) - RTL-SDR library (rtlsdrblog source)
 - [volumio-plugins-sources-bookworm/rtlsdr_radio](https://github.com/volumio/volumio-plugins-sources-bookworm) - Volumio plugin
 
