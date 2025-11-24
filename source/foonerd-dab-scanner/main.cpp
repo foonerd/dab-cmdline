@@ -56,6 +56,9 @@
 using std::cerr;
 using std::endl;
 
+// Runtime debug flag - controlled via -v command line option
+bool debugEnabled = false;
+
 void    printOptions	();	// forward declaration
 //	we deal with some callbacks, so we have some data that needs
 //	to be accessed from global contexts
@@ -220,7 +223,7 @@ bool		autogain	= false;
 int16_t		ppmOffset	= 0;
 int		dumpDuration	= 1;
 bool		rawDump		= false;
-const char	*optionsString	= "I:F:jD:M:B:C:G:p:QR:T:";
+const char	*optionsString	= "I:F:jD:M:B:C:G:p:QR:T:v";
 #elif   HAVE_RTL_TCP
 int		rtl_tcp_gain	= 50;
 bool		autogain	= false;
@@ -238,11 +241,7 @@ bandHandler	dabBand;
 deviceHandler	*theDevice;
 bool firstEnsemble = true;
 
-	fprintf (stderr, "dab_scanner V 2.0alfa,\n"
-	                "Copyright 2018 J van Katwijk, Lazy Chair Computing\n"	                         "2018 Hayati Ayguen\n"
-	                 "2019 J van Katwijk\n"
-	                 "2020 J van Katwijk\n"
-	                 "2025 J van Katwijk\n");
+	// Based on dab-scanner by J van Katwijk (Lazy Chair Computing)
 	timeSynced.	store (false);
 	timesyncSet.	store (false);
 	run.		store (false);
@@ -398,6 +397,10 @@ bool firstEnsemble = true;
 
 	      case 'T':
 	         dumpDuration	= atoi (optarg);
+	         break;
+
+	      case 'v':
+	         debugEnabled	= true;
 	         break;
 #endif
 

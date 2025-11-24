@@ -67,6 +67,10 @@
 #endif
 using std::cerr;
 using std::endl;
+
+// Runtime debug flag - controlled via -D command line option
+bool debugEnabled = false;
+
 std::string dirInfo;
 
 void    printOptions (void);	// forward declaration
@@ -408,7 +412,7 @@ const char	*optionsString	= "i:T:D:d:M:B:P:O:A:C:G:p:S:";
 int16_t		gain		= 50;
 bool		autogain	= false;
 int16_t		ppmOffset	= 0;
-const char	*optionsString	= "i:T:D:d:M:B:P:O:A:C:G:p:QS:";
+const char	*optionsString	= "i:T:D:d:M:B:P:O:A:C:G:p:QS:v";
 #elif	HAVE_WAVFILES
 std::string	fileName;
 bool		repeater	= true;
@@ -434,8 +438,7 @@ struct sigaction sigact;
 bandHandler	dabBand;
 deviceHandler	*theDevice;
 
-	fprintf (stderr, "dab_cmdline example III,\n \
-	                  Copyright 2017 J van Katwijk, Lazy Chair Computing\n");
+	// Based on dab-cmdline by J van Katwijk (Lazy Chair Computing)
 	timeSynced.	store (false);
 	timesyncSet.	store (false);
 	run.		store (false);
@@ -446,7 +449,6 @@ deviceHandler	*theDevice;
 	   exit (1);
 	}
 
-	fprintf (stderr, "options are %s\n", optionsString);
 	while ((opt = getopt (argc, argv, optionsString)) != -1) {
 	   switch (opt) {
 	      case 'i':
@@ -582,6 +584,10 @@ deviceHandler	*theDevice;
 
 	      case 'C':
 	         theChannel	= std::string (optarg);
+	         break;
+
+	      case 'v':
+	         debugEnabled	= true;
 	         break;
 
 #elif	HAVE_RTL_TCP
@@ -825,6 +831,7 @@ void    printOptions (void) {
 "	                  -G number\t	gain, range 0 .. 100\n"
 "	                  -Q autogain (default off)\n"
 "	                  -c number\tppm offset\n"
+"	                  -v verbose debug output\n"
 "	for airspy:\n"
 "	                  -B Band\tBand is either L_BAND or BAND_III (default)\n"
 "	                  -C Channel\n"

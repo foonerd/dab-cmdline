@@ -1,6 +1,6 @@
 #
 /*
- *    Copyright (C) 2010, 2011, 2012, 2024
+ *    Copyright (C) 2010, 2011, 2012, 2013
  *    Jan van Katwijk (J.vanKatwijk@gmail.com)
  *    Lazy Chair Computing
  *
@@ -19,28 +19,23 @@
  *    You should have received a copy of the GNU General Public License
  *    along with DAB library; if not, write to the Free Software
  *    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
- *
- *	We have to create a simple virtual class here, since we
- *	want the interface with different devices (including  filehandling)
- *	to be transparent
  */
-#pragma once
+#ifndef	__DEVICE_HANDLER__
+#define	__DEVICE_HANDLER__
+
+#include	<stdio.h>
 
 #include	<stdint.h>
 #include	<complex>
 #include	<thread>
 
-#define DEBUG_ENABLED
+// Runtime debug flag - controlled via -v command line option
+extern bool debugEnabled;
 
-#ifdef DEBUG_ENABLED
 #define DEBUG_PRINT(...) \
     do { \
-				fprintf(stderr, __VA_ARGS__); \
+        if (debugEnabled) fprintf(stderr, __VA_ARGS__); \
     } while (0)
-#else
-#define DEBUG_PRINT(...) \
-    do { } while (0)
-#endif
 
 
 using namespace std;
@@ -49,25 +44,22 @@ class	deviceHandler {
 public:
 			deviceHandler 	();
 virtual			~deviceHandler 	();
-virtual		int32_t	defaultFrequency	();
 virtual		bool	restartReader	(int32_t);
 virtual		void	stopReader	();
+virtual		void	run		();
 virtual		int32_t	getSamples	(std::complex<float> *, int32_t);
 virtual		int32_t	Samples		();
+virtual		int32_t	defaultFrequency();
 virtual		void	resetBuffer	();
-virtual		int16_t	bitDepth	() { return 10;}
 virtual		void	setGain		(int32_t);
 virtual		bool	has_autogain	();
 virtual		void	set_autogain	(bool);
-//
-//	for the sdrplay
-virtual		void	set_ifgainReduction (int);
+virtual		void	set_ifgainReduction	(int);
 virtual		void	set_lnaState	(int);
 //
 protected:
-		int32_t	lastFrequency;
-	        int32_t	vfoOffset;
-	        int	theGain;
-virtual		void	run		();
+	        int32_t	lastFrequency;
+	        int16_t	theGain;
+	        bool	isOK;
 };
-
+#endif
