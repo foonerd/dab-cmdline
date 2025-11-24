@@ -26,6 +26,7 @@
 #include	<unistd.h>
 #include	<signal.h>
 #include	<getopt.h>
+#include	<ctime>
 #include        <cstdio>
 #include	<fstream>
 #include        <iostream>
@@ -66,6 +67,10 @@
 #endif
 using std::cerr;
 using std::endl;
+
+// Runtime debug flag - controlled via -D command line option
+bool debugEnabled = false;
+
 std::string dirInfo;
 
 void    printOptions (void);	// forward declaration
@@ -126,21 +131,61 @@ void	name_of_ensemble (const std::string &name, int Id, void *userData) {
 //      as parameters the filename where the picture is stored
 //      d denotes the subtype of the picture
 //      typedef void (*motdata_t)(std::string, int, void *);
-static
+static int motSequence = 0;
+
 void    motdata_Handler (uint8_t * data, int size,
                          const char *name, int d, void *ctx) {
-        (void)data; (void)size; (void)name; (void)d; (void)ctx;
+        (void)ctx;
+        
+        // Validate input
+        if (data == NULL || size <= 0 || size > 10*1024*1024) {
+                fprintf (stderr, "MOT: invalid data (size=%d)\n", size);
+                return;
+        }
+        
+        // Detect image type from magic bytes
+        const char *ext = ".bin";
+        const char *type = "unknown";
+        if (size >= 2 && data[0] == 0xFF && data[1] == 0xD8) {
+                ext = ".jpg";
+                type = "JPEG";
+        } else if (size >= 8 && data[0] == 0x89 && data[1] == 0x50 && 
+                   data[2] == 0x4E && data[3] == 0x47) {
+                ext = ".png";
+                type = "PNG";
+        }
+        
+        // Build filename: use provided name or generate sequence
         std::string slideName;
-        slideName = dirInfo+"DABslide.jpg";
+        if (name != NULL && strlen(name) > 0) {
+                // Use provided filename (may already have extension)
+                slideName = dirInfo + std::string(name);
+        } else {
+                // Generate with sequence number and detected extension
+                char seqbuf[32];
+                snprintf(seqbuf, sizeof(seqbuf), "slide_%04d%s", motSequence++, ext);
+                slideName = dirInfo + std::string(seqbuf);
+        }
+        
+        // Write image with validation
         FILE * temp = fopen (slideName. c_str (), "w+b");
-           if (temp) {
-              fwrite (data, 1, size, temp);
-              fclose (temp);
-           }
-           else {
-              fprintf (stderr, "error writing to file %s\n", slideName. c_str());
-           }
-        fprintf (stderr, "slide %s\n", name);
+        if (temp) {
+                size_t written = fwrite (data, 1, size, temp);
+                fclose (temp);
+                
+                if (written == (size_t)size) {
+                        fprintf (stderr, "MOT: saved %s (%d bytes, %s, type=%d)\n", 
+                                slideName.c_str(), size, type, d);
+                        // Machine-readable format for v1.1.0 plugin
+                        fprintf (stderr, "MOT_IMAGE: path=%s size=%d type=%s\n",
+                                slideName.c_str(), size, type);
+                } else {
+                        fprintf (stderr, "MOT: write error %s (%zu/%d bytes)\n", 
+                                slideName.c_str(), written, size);
+                }
+        } else {
+                fprintf (stderr, "MOT: cannot open file %s\n", slideName. c_str());
+        }
 }
 
 static
@@ -152,28 +197,72 @@ void	serviceName (const std::string &s, int SId, uint16_t subChId,
 static
 void	programdata_Handler (audiodata *d, void *ctx) {
 	(void)ctx;
+	// Human-readable format (backward compatible)
 	fprintf (stderr, "\tstartaddress\t= %d\n", d -> startAddr);
 	fprintf (stderr, "\tlength\t\t= %d\n",     d -> length);
 	fprintf (stderr, "\tsubChId\t\t= %d\n",    d -> subchId);
 	fprintf (stderr, "\tprotection\t= %d\n",   d -> protLevel);
 	fprintf (stderr, "\tbitrate\t\t= %d\n",    d -> bitRate);
+	
+	// Machine-readable format for v1.1.0 plugin parsing
+	fprintf (stderr, "BITRATE: %d\n", d -> bitRate);
+	fprintf (stderr, "DAB_TYPE: %s\n", (d -> ASCTy == 077) ? "DAB+" : "DAB");
 }
 
 //
 //	The function is called from within the library with
 //	a string, the so-called dynamic label
+static std::string lastDlsLabel = "";
+
 static
 void	dataOut_Handler (const char *label, void *ctx) {
 	(void)ctx;
-        std::string strLabel = std::string(label);
-        std::string strLabelfile = dirInfo+"DABlabel.txt";
-        std::ofstream out(strLabelfile);
-        out << strLabel;
-        if (!out) {
-           fprintf (stderr, "error writing to file %s\n", strLabelfile. c_str());
-        }
-        out.close();
-	fprintf (stderr, "%s\r", label);
+	
+	if (label == NULL) {
+		return;
+	}
+	
+	std::string strLabel = std::string(label);
+	
+	// Ignore very short labels (likely partial segments)
+	if (strLabel.length() < 10) {
+		return;
+	}
+	
+	// Deduplicate - only process if changed
+	// DAB sends DLS every 2-4 seconds even if unchanged
+	if (strLabel == lastDlsLabel) {
+		return;
+	}
+	
+	// Ignore if new label is substring of previous (partial segment)
+	if (lastDlsLabel.find(strLabel) != std::string::npos) {
+		return;
+	}
+	
+	// Ignore if previous label is substring of new (we already showed it)
+	if (strLabel.find(lastDlsLabel) != std::string::npos && lastDlsLabel.length() > 20) {
+		// But update stored label to the longer version
+		lastDlsLabel = strLabel;
+		return;
+	}
+	
+	lastDlsLabel = strLabel;
+	
+	// Write with timestamp for plugin tracking
+	std::string strLabelfile = dirInfo+"DABlabel.txt";
+	std::ofstream out(strLabelfile, std::ios::trunc);
+	if (out) {
+		time_t now = time(NULL);
+		out << "timestamp=" << now << "\n";
+		out << "label=" << strLabel << "\n";
+		out.close();
+	} else {
+		fprintf (stderr, "DLS: error writing to file %s\n", strLabelfile. c_str());
+	}
+	
+	// Machine-readable format for v1.1.0 metadata
+	fprintf (stderr, "DLS: %s\n", label);
 }
 //
 //	Note: the function is called from the tdcHandler with a
@@ -231,22 +320,42 @@ void    timeHandler             (int hours, int minutes, void *ctx) {
 //	of gaps
 //
 static bool pcmFormatReported = false;
+static int lastRate = 0;
+static bool lastStereo = false;
+
 static
 void	pcmHandler (int16_t *buffer, int size, int rate,
 	                              bool isStereo, void *ctx) {
-	// Report PCM format once to stderr for plugin detection
-	if (!pcmFormatReported) {
+	// Report PCM format on first call AND when format changes
+	// DAB streams can switch rates (rare but possible)
+	if (!pcmFormatReported || rate != lastRate || isStereo != lastStereo) {
 		fprintf(stderr, "PCM: rate=%d stereo=%d size=%d\n", 
 		        rate, isStereo ? 1 : 0, size);
+		fprintf(stderr, "AUDIO_FORMAT: rate=%d channels=%d\n",
+		        rate, isStereo ? 2 : 1);
 		pcmFormatReported = true;
+		lastRate = rate;
+		lastStereo = isStereo;
 	}
+	
+	// Validate buffer before write
+	// Note: size=0 on first call is normal (format detection)
+	if (buffer == NULL || size <= 0) {
+		return;
+	}
+	
 #ifdef	STREAMER_OUTPUT
 	if (theStreamer == NULL)
 	   return;
 	if (theStreamer -> isRunning ())
 	   theStreamer -> addBuffer (buffer, size, 2);
 #else
-	fwrite ((void *)buffer, size, 2, stdout);
+	// Write with error handling and immediate flush
+	size_t written = fwrite ((void *)buffer, size, 2, stdout);
+	if (written != 2) {
+		fprintf(stderr, "PCM: write error (expected 2, wrote %zu)\n", written);
+	}
+	fflush(stdout); // Ensure immediate delivery to pipeline
 #endif
 }
 
@@ -303,7 +412,7 @@ const char	*optionsString	= "i:T:D:d:M:B:P:O:A:C:G:p:S:";
 int16_t		gain		= 50;
 bool		autogain	= false;
 int16_t		ppmOffset	= 0;
-const char	*optionsString	= "i:T:D:d:M:B:P:O:A:C:G:p:QS:";
+const char	*optionsString	= "i:T:D:d:M:B:P:O:A:C:G:p:QS:v";
 #elif	HAVE_WAVFILES
 std::string	fileName;
 bool		repeater	= true;
@@ -329,8 +438,7 @@ struct sigaction sigact;
 bandHandler	dabBand;
 deviceHandler	*theDevice;
 
-	fprintf (stderr, "dab_cmdline example III,\n \
-	                  Copyright 2017 J van Katwijk, Lazy Chair Computing\n");
+	// Based on dab-cmdline by J van Katwijk (Lazy Chair Computing)
 	timeSynced.	store (false);
 	timesyncSet.	store (false);
 	run.		store (false);
@@ -341,7 +449,6 @@ deviceHandler	*theDevice;
 	   exit (1);
 	}
 
-	fprintf (stderr, "options are %s\n", optionsString);
 	while ((opt = getopt (argc, argv, optionsString)) != -1) {
 	   switch (opt) {
 	      case 'i':
@@ -477,6 +584,10 @@ deviceHandler	*theDevice;
 
 	      case 'C':
 	         theChannel	= std::string (optarg);
+	         break;
+
+	      case 'v':
+	         debugEnabled	= true;
 	         break;
 
 #elif	HAVE_RTL_TCP
@@ -720,6 +831,7 @@ void    printOptions (void) {
 "	                  -G number\t	gain, range 0 .. 100\n"
 "	                  -Q autogain (default off)\n"
 "	                  -c number\tppm offset\n"
+"	                  -v verbose debug output\n"
 "	for airspy:\n"
 "	                  -B Band\tBand is either L_BAND or BAND_III (default)\n"
 "	                  -C Channel\n"

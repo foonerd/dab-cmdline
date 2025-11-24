@@ -153,6 +153,8 @@ if [[ "$ARCH" == "armv6" ]]; then
   EXTRA_CXXFLAGS="-march=armv6 -mfpu=vfp -mfloat-abi=hard -marm"
 elif [[ "$ARCH" == "armhf" ]]; then
   EXTRA_CXXFLAGS="-march=armv7-a -mfpu=neon-vfpv4 -mfloat-abi=hard"
+elif [[ "$ARCH" == "arm64" ]]; then
+  EXTRA_CXXFLAGS="-march=armv8-a+simd -mtune=cortex-a53"
 fi
 
 # Absolute path to DEBs for mounting
