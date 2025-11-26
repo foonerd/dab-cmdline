@@ -37,11 +37,13 @@ public:
 	void	processPAD	(uint8_t *, int16_t, uint8_t, uint8_t);
 private:
 	dataOut_t	dataOut;
+	dlPlusOut_t	dlPlusOut;
 	motdata_t	motdata_Handler;
 	void		*ctx;
 	void		handle_variablePAD	(uint8_t *, int16_t, uint8_t);
 	void		handle_shortPAD		(uint8_t *, int16_t, uint8_t);
 	void		dynamicLabel		(uint8_t *, int16_t, uint8_t);
+	void		handleDLPlusCommand	(uint8_t *, int16_t);
 	void		new_MSC_element 	(std::vector<uint8_t>);
 	void		add_MSC_element		(std::vector<uint8_t>);
 	void		build_MSC_segment	(std::vector<uint8_t>);
@@ -64,6 +66,13 @@ private:
 //      The msc_dataGroupBuffer is - as the name suggests - used for
 //      assembling the msc_data group.
         std::vector<uint8_t> msc_dataGroupBuffer;
+//
+//	DL Plus state - tags received with last DL Plus command
+	dlPlusTag_t	dlPlusTags[4];
+	uint8_t		dlPlusNumTags;
+	bool		dlPlusItemToggle;
+	bool		dlPlusItemRunning;
+	bool		dlPlusValid;		// true if we have DL Plus tags
 };
 
 #endif

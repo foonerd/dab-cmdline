@@ -29,6 +29,7 @@
   */
 	padHandler::padHandler	(API_struct *p, void *ctx) {
 	this	-> dataOut		= p -> dataOut_Handler;
+	this	-> dlPlusOut		= p -> dlPlusOut_Handler;
 	this	-> motdata_Handler	= p -> motdata_Handler;
 	this	-> ctx			= ctx;
 //
@@ -46,6 +47,12 @@
 	segmentNumber	= -1;
 	currentSlide	= nullptr;
 	dynamicLabelText. clear ();
+//
+//	DL Plus state initialization
+	dlPlusNumTags	= 0;
+	dlPlusItemToggle = false;
+	dlPlusItemRunning = false;
+	dlPlusValid	= false;
 }
 
 	padHandler::~padHandler	(void) {
@@ -250,6 +257,119 @@ std::vector<uint8_t> data;
 	}
 }
 //
+//	Handle DL Plus command (ETSI TS 102 980)
+//	Called when Cflag=1 in dynamic label segment
+//	Parses DL Plus tags and stores them for later callback
+void	padHandler::handleDLPlusCommand (uint8_t *data, int16_t length) {
+	if (length < 2) {
+	   dlPlusValid = false;
+	   return;
+	}
+
+	// First byte: [command type 4 bits] [link] [toggle] [running] [N1 bit0]
+	uint8_t cmdByte = data[0];
+	uint8_t cmdType = (cmdByte >> 4) & 0x0F;
+	
+	// Command type 0000 = DL Plus Tags
+	if (cmdType != 0) {
+	   // Other command types (like clear display) - not DL Plus Tags
+	   if (cmdType == 1) {
+	      // Command type 0001 = Item clear/delete
+	      dlPlusValid = false;
+	   }
+	   return;
+	}
+
+	// Parse DL Plus Tags command
+	// bool linkBit = (cmdByte >> 3) & 0x01;  // unused for now
+	dlPlusItemToggle = (cmdByte >> 2) & 0x01;
+	dlPlusItemRunning = (cmdByte >> 1) & 0x01;
+	uint8_t n1_bit0 = cmdByte & 0x01;
+
+	// Second byte: [N1 bit1] [content type bits 6-0]
+	uint8_t byte1 = data[1];
+	uint8_t n1_bit1 = (byte1 >> 7) & 0x01;
+	uint8_t numTags = ((n1_bit1 << 1) | n1_bit0) + 1;  // 1-4 tags
+
+	if (numTags > 4) numTags = 4;
+	dlPlusNumTags = numTags;
+
+	// First tag content type is in bits 6-0 of byte 1
+	dlPlusTags[0].contentType = byte1 & 0x7F;
+
+	// Parse remaining tag data
+	// Each tag after the first byte needs: start marker (7 bits) + length (6 bits) = 13 bits
+	// First tag: contentType already parsed, need start (7) + length (6) = 13 bits
+	// Total bits needed: 13 bits per tag
+	
+	// Bit stream parsing from byte 2 onwards
+	// First tag: start[6:0] in bits 7-1 of byte2, length[5:0] in bits 0 of byte2 + bits 7-3 of byte3
+	
+	int bitPos = 16;  // Start after first 2 bytes (16 bits)
+	
+	for (int t = 0; t < numTags; t++) {
+	   int byteIdx, bitIdx;
+	   
+	   if (t == 0) {
+	      // First tag: content type already parsed
+	      // Start marker: 7 bits starting at bit 16
+	      if (length < 3) { dlPlusValid = false; return; }
+	      byteIdx = bitPos / 8;
+	      bitIdx = bitPos % 8;
+	      
+	      // Get start marker (7 bits)
+	      uint16_t twoBytes = (data[byteIdx] << 8);
+	      if (byteIdx + 1 < length) twoBytes |= data[byteIdx + 1];
+	      dlPlusTags[0].startMarker = (twoBytes >> (9 - bitIdx)) & 0x7F;
+	      bitPos += 7;
+	      
+	      // Get length marker (6 bits)
+	      byteIdx = bitPos / 8;
+	      bitIdx = bitPos % 8;
+	      twoBytes = (data[byteIdx] << 8);
+	      if (byteIdx + 1 < length) twoBytes |= data[byteIdx + 1];
+	      dlPlusTags[0].length = (twoBytes >> (10 - bitIdx)) & 0x3F;
+	      bitPos += 6;
+	   }
+	   else {
+	      // Subsequent tags: content type (7) + start (7) + length (6) = 20 bits
+	      int bytesNeeded = (bitPos + 20 + 7) / 8;
+	      if (bytesNeeded > length) { 
+	         dlPlusNumTags = t;  // Truncate to tags we could parse
+	         break;
+	      }
+	      
+	      // Content type (7 bits)
+	      byteIdx = bitPos / 8;
+	      bitIdx = bitPos % 8;
+	      uint32_t threeBytes = (data[byteIdx] << 16);
+	      if (byteIdx + 1 < length) threeBytes |= (data[byteIdx + 1] << 8);
+	      if (byteIdx + 2 < length) threeBytes |= data[byteIdx + 2];
+	      dlPlusTags[t].contentType = (threeBytes >> (17 - bitIdx)) & 0x7F;
+	      bitPos += 7;
+	      
+	      // Start marker (7 bits)
+	      byteIdx = bitPos / 8;
+	      bitIdx = bitPos % 8;
+	      threeBytes = (data[byteIdx] << 16);
+	      if (byteIdx + 1 < length) threeBytes |= (data[byteIdx + 1] << 8);
+	      if (byteIdx + 2 < length) threeBytes |= data[byteIdx + 2];
+	      dlPlusTags[t].startMarker = (threeBytes >> (17 - bitIdx)) & 0x7F;
+	      bitPos += 7;
+	      
+	      // Length marker (6 bits)
+	      byteIdx = bitPos / 8;
+	      bitIdx = bitPos % 8;
+	      uint16_t twoBytes = (data[byteIdx] << 8);
+	      if (byteIdx + 1 < length) twoBytes |= data[byteIdx + 1];
+	      dlPlusTags[t].length = (twoBytes >> (10 - bitIdx)) & 0x3F;
+	      bitPos += 6;
+	   }
+	}
+
+	dlPlusValid = (dlPlusNumTags > 0);
+}
+//
 //	A dynamic label is created from a sequence of (dynamic) xpad
 //	fields, starting with CI = 2, continuing with CI = 3
 void	padHandler::dynamicLabel (uint8_t *data, int16_t length, uint8_t CI) {
@@ -276,9 +396,9 @@ int16_t  dataLength	= 0;
 	   else 
 	      segmentno = ((prefix >> 4) & 07) + 1;
 
-	   if (Cflag) {		// special dynamic label command
-	      // the only specified command is to clear the display
-	      dynamicLabelText. clear ();
+	   if (Cflag) {		// DL Plus command (ETSI TS 102 980)
+	      // Parse DL Plus command - data after prefix contains tags
+	      handleDLPlusCommand (&data[2], length - 2);
 	   }
 	   else {		// Dynamic text length
 	      int16_t totalDataLength = field_1 + 1;
@@ -303,7 +423,15 @@ int16_t  dataLength	= 0;
 	      if (last) {
 	         if ((dataOut != nullptr) && !moreXPad) {
 	            dataOut (dynamicLabelText. c_str (), ctx);
-	                              
+	            // Send DL Plus tags if we have them
+	            if (dlPlusValid && dlPlusOut != nullptr) {
+	               dlPlusOut (dynamicLabelText. c_str (),
+	                          dlPlusNumTags,
+	                          dlPlusTags,
+	                          dlPlusItemToggle,
+	                          dlPlusItemRunning,
+	                          ctx);
+	            }
 	         }
 	         else
 	            isLastSegment = true;
@@ -332,6 +460,15 @@ int16_t  dataLength	= 0;
 	   dynamicLabelText. append(segmentText);
 	   if ((dataOut != nullptr) && !moreXPad && isLastSegment) {
 	      dataOut (dynamicLabelText. c_str (), ctx);
+	      // Send DL Plus tags if we have them
+	      if (dlPlusValid && dlPlusOut != nullptr) {
+	         dlPlusOut (dynamicLabelText. c_str (),
+	                    dlPlusNumTags,
+	                    dlPlusTags,
+	                    dlPlusItemToggle,
+	                    dlPlusItemRunning,
+	                    ctx);
+	      }
 	   }
 	}
 }

@@ -264,6 +264,130 @@ void	dataOut_Handler (const char *label, void *ctx) {
 	// Machine-readable format for v1.1.0 metadata
 	fprintf (stderr, "DLS: %s\n", label);
 }
+
+//
+//	DL Plus callback - receives semantic tags for dynamic label
+//	Content types from ETSI TS 102 980:
+//	1 = ITEM.TITLE, 4 = ITEM.ARTIST, 31 = STATIONNAME.LONG, etc.
+static
+void	dlPlusOut_Handler (const char *label, uint8_t numTags, 
+                           dlPlusTag_t *tags, bool itemToggle, 
+                           bool itemRunning, void *ctx) {
+	(void)ctx;
+	
+	if (label == NULL || numTags == 0) {
+		return;
+	}
+	
+	std::string strLabel = std::string(label);
+	
+	// Write DL Plus data to file for plugin
+	std::string dlPlusFile = dirInfo + "DABdlplus.txt";
+	std::ofstream out(dlPlusFile, std::ios::trunc);
+	if (out) {
+		time_t now = time(NULL);
+		out << "timestamp=" << now << "\n";
+		out << "label=" << strLabel << "\n";
+		out << "itemToggle=" << (itemToggle ? 1 : 0) << "\n";
+		out << "itemRunning=" << (itemRunning ? 1 : 0) << "\n";
+		out << "numTags=" << (int)numTags << "\n";
+		
+		// Output each tag
+		for (int i = 0; i < numTags; i++) {
+			out << "tag" << i << "=" 
+			    << (int)tags[i].contentType << ","
+			    << (int)tags[i].startMarker << ","
+			    << (int)tags[i].length << "\n";
+			
+			// Extract tagged text from label
+			int start = tags[i].startMarker;
+			int len = tags[i].length + 1;  // length field is actual length - 1
+			if (start >= 0 && start < (int)strLabel.length()) {
+				std::string tagText = strLabel.substr(start, len);
+				
+				// Content type names for common types
+				const char* typeName = "UNKNOWN";
+				switch (tags[i].contentType) {
+					case 0:  typeName = "DUMMY"; break;
+					case 1:  typeName = "ITEM.TITLE"; break;
+					case 2:  typeName = "ITEM.ALBUM"; break;
+					case 3:  typeName = "ITEM.TRACKNUMBER"; break;
+					case 4:  typeName = "ITEM.ARTIST"; break;
+					case 5:  typeName = "ITEM.COMPOSITION"; break;
+					case 6:  typeName = "ITEM.MOVEMENT"; break;
+					case 7:  typeName = "ITEM.CONDUCTOR"; break;
+					case 8:  typeName = "ITEM.COMPOSER"; break;
+					case 9:  typeName = "ITEM.BAND"; break;
+					case 10: typeName = "ITEM.COMMENT"; break;
+					case 11: typeName = "ITEM.GENRE"; break;
+					case 12: typeName = "INFO.NEWS"; break;
+					case 13: typeName = "INFO.NEWS.LOCAL"; break;
+					case 14: typeName = "INFO.STOCKMARKET"; break;
+					case 15: typeName = "INFO.SPORT"; break;
+					case 16: typeName = "INFO.LOTTERY"; break;
+					case 17: typeName = "INFO.HOROSCOPE"; break;
+					case 18: typeName = "INFO.DAILY_DIVERSION"; break;
+					case 19: typeName = "INFO.HEALTH"; break;
+					case 20: typeName = "INFO.EVENT"; break;
+					case 21: typeName = "INFO.SCENE"; break;
+					case 22: typeName = "INFO.CINEMA"; break;
+					case 23: typeName = "INFO.TV"; break;
+					case 24: typeName = "INFO.DATE_TIME"; break;
+					case 25: typeName = "INFO.WEATHER"; break;
+					case 26: typeName = "INFO.TRAFFIC"; break;
+					case 27: typeName = "INFO.ALARM"; break;
+					case 28: typeName = "INFO.ADVERTISEMENT"; break;
+					case 29: typeName = "INFO.URL"; break;
+					case 30: typeName = "INFO.OTHER"; break;
+					case 31: typeName = "STATIONNAME.SHORT"; break;
+					case 32: typeName = "STATIONNAME.LONG"; break;
+					case 33: typeName = "PROGRAMME.NOW"; break;
+					case 34: typeName = "PROGRAMME.NEXT"; break;
+					case 35: typeName = "PROGRAMME.PART"; break;
+					case 36: typeName = "PROGRAMME.HOST"; break;
+					case 37: typeName = "PROGRAMME.EDITORIAL_STAFF"; break;
+					case 38: typeName = "PROGRAMME.FREQUENCY"; break;
+					case 39: typeName = "PROGRAMME.HOMEPAGE"; break;
+					case 40: typeName = "PROGRAMME.SUBCHANNEL"; break;
+					case 41: typeName = "PHONE.HOTLINE"; break;
+					case 42: typeName = "PHONE.STUDIO"; break;
+					case 43: typeName = "PHONE.OTHER"; break;
+					case 44: typeName = "SMS.STUDIO"; break;
+					case 45: typeName = "SMS.OTHER"; break;
+					case 46: typeName = "EMAIL.HOTLINE"; break;
+					case 47: typeName = "EMAIL.STUDIO"; break;
+					case 48: typeName = "EMAIL.OTHER"; break;
+					case 49: typeName = "MMS.OTHER"; break;
+					case 50: typeName = "CHAT"; break;
+					case 51: typeName = "CHAT.CENTRE"; break;
+					case 52: typeName = "VOTE.QUESTION"; break;
+					case 53: typeName = "VOTE.CENTRE"; break;
+					case 59: typeName = "DESCRIPTOR.PLACE"; break;
+					case 60: typeName = "DESCRIPTOR.APPOINTMENT"; break;
+					case 61: typeName = "DESCRIPTOR.IDENTIFIER"; break;
+					case 62: typeName = "DESCRIPTOR.PURCHASE"; break;
+					case 63: typeName = "DESCRIPTOR.GET_DATA"; break;
+				}
+				out << typeName << "=" << tagText << "\n";
+			}
+		}
+		out.close();
+		
+		// Machine-readable stderr output
+		fprintf(stderr, "DL+: %d tags, running=%d\n", numTags, itemRunning ? 1 : 0);
+		for (int i = 0; i < numTags; i++) {
+			if (tags[i].startMarker < strLabel.length()) {
+				int len = tags[i].length + 1;
+				std::string tagText = strLabel.substr(tags[i].startMarker, len);
+				fprintf(stderr, "DL+ TAG[%d]: type=%d start=%d len=%d text=\"%s\"\n",
+				        i, tags[i].contentType, tags[i].startMarker, 
+				        tags[i].length, tagText.c_str());
+			}
+		}
+	} else {
+		fprintf(stderr, "DL+: error writing to %s\n", dlPlusFile.c_str());
+	}
+}
 //
 //	Note: the function is called from the tdcHandler with a
 //	frame, either frame 0 or frame 1.
@@ -700,6 +824,7 @@ deviceHandler	*theDevice;
 	interface. fib_quality_Handler	= fibQuality;
 	interface. audioOut_Handler	= pcmHandler;
 	interface. dataOut_Handler	= wantInfo == true ? dataOut_Handler : nullptr;
+	interface. dlPlusOut_Handler	= wantInfo == true ? dlPlusOut_Handler : nullptr;
 	interface. bytesOut_Handler	= bytesOut_Handler;
 	interface. programdata_Handler	= programdata_Handler;
 	interface. program_quality_Handler		= mscQuality;

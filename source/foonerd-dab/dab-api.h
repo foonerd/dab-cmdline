@@ -136,6 +136,22 @@ typedef	struct {
 //	dynamic label data, embedded in the audio stream, is sent as string
 	typedef void (*dataOut_t)(const char *, void *);
 //
+//	DL Plus tag structure for semantic metadata
+	typedef struct {
+		uint8_t		contentType;	// 0-127, see ETSI TS 102 980
+		uint8_t		startMarker;	// character position in label
+		uint8_t		length;		// number of characters - 1
+	} dlPlusTag_t;
+//
+//	DL Plus data callback - provides semantic tags for dynamic label
+//	Called after dataOut when DL Plus tags are available
+	typedef void (*dlPlusOut_t)(const char *label,	// the DL text
+				    uint8_t numTags,	// 0-4 tags
+				    dlPlusTag_t *tags,	// array of tags
+				    bool itemToggle,	// item change indicator
+				    bool itemRunning,	// music currently playing
+				    void *ctx);
+//
 //	byte oriented data, emitted by various dataHandlers, is sent
 //	as array of uint8_t values (packed bytes)
 	typedef void (*bytesOut_t)(uint8_t *, int16_t, uint8_t, void *);
@@ -186,6 +202,7 @@ typedef struct {
 	fib_quality_t	fib_quality_Handler;
 	audioOut_t	audioOut_Handler;
 	dataOut_t	dataOut_Handler;
+	dlPlusOut_t	dlPlusOut_Handler;
 	bytesOut_t	bytesOut_Handler;
 	programdata_t	programdata_Handler;
 	programQuality_t    program_quality_Handler;
