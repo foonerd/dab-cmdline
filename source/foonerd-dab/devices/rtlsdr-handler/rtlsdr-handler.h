@@ -30,6 +30,16 @@
 
 #define	DUMP_SIZE	8192
 
+// RTL-SDR tuner type identifiers (from rtl-sdr.h)
+// Used for tuner-specific logging and diagnostics
+#define	RTLSDR_TUNER_UNKNOWN	0
+#define	RTLSDR_TUNER_E4000	1
+#define	RTLSDR_TUNER_FC0012	2
+#define	RTLSDR_TUNER_FC0013	3
+#define	RTLSDR_TUNER_FC2580	4
+#define	RTLSDR_TUNER_R820T	5
+#define	RTLSDR_TUNER_R828D	6
+
 class	dll_driver;
 typedef	void *HINSTANCE;
 //
@@ -61,6 +71,7 @@ typedef uint32_t (*  pfnrtlsdr_get_device_count) (void);
 typedef	int (* pfnrtlsdr_set_freq_correction)(rtlsdr_dev_t *, int);
 typedef	char *(* pfnrtlsdr_get_device_name)(int);
 typedef	char *(* pfnrtlsdr_set_opt_string)(rtlsdr_dev_t *dev, const char *opts, int verbose);
+typedef	int (* pfnrtlsdr_get_tuner_type)(rtlsdr_dev_t *);
 }
 //	This class is a simple wrapper around the
 //	rtlsdr library that is read is as dll
@@ -108,6 +119,7 @@ private:
 	char		* deviceOptions;
 	uint8_t		dumpBuffer [DUMP_SIZE];
 	int		dumpIndex;
+	int		tunerType;	// Detected tuner type for diagnostics
 //	here we need to load functions from the dll
 	bool		load_rtlFunctions	(void);
 	pfnrtlsdr_get_index_by_serial	rtlsdr_get_index_by_serial;
@@ -130,5 +142,5 @@ private:
 	pfnrtlsdr_set_freq_correction rtlsdr_set_freq_correction;
 	pfnrtlsdr_get_device_name rtlsdr_get_device_name;
 	pfnrtlsdr_set_opt_string rtlsdr_set_opt_string;
+	pfnrtlsdr_get_tuner_type rtlsdr_get_tuner_type;
 };
-
