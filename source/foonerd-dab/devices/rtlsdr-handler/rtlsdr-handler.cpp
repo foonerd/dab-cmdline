@@ -68,6 +68,20 @@ void	controlThread (rtlsdrHandler *theStick) {
 	                          0,
 	                          READLEN_DEFAULT);
 }
+
+//	Helper function to get tuner name string for logging
+static const char* getTunerName(int tunerType) {
+	switch (tunerType) {
+	   case RTLSDR_TUNER_E4000:  return "E4000";
+	   case RTLSDR_TUNER_FC0012: return "FC0012";
+	   case RTLSDR_TUNER_FC0013: return "FC0013";
+	   case RTLSDR_TUNER_FC2580: return "FC2580";
+	   case RTLSDR_TUNER_R820T:  return "R820T/R820T2";
+	   case RTLSDR_TUNER_R828D:  return "R828D";
+	   default:                  return "Unknown";
+	}
+}
+
 //
 //	Our wrapper is a simple classs
 	rtlsdrHandler::rtlsdrHandler (int32_t	frequency,
@@ -98,6 +112,7 @@ int16_t	i;
 	this	-> sampleCounter= 0;
 	gains			= NULL;
 	running			= false;
+	tunerType		= RTLSDR_TUNER_UNKNOWN;
 
 #ifdef	__MINGW32__
 	const char *libraryString = "rtlsdr.dll";
@@ -155,6 +170,25 @@ int16_t	i;
 	}
 
 	open			= true;
+
+	// Detect and log tuner type for diagnostics
+	// This helps users identify their hardware and troubleshoot issues
+	if (rtlsdr_get_tuner_type != NULL) {
+	   tunerType = rtlsdr_get_tuner_type(device);
+	   DEBUG_PRINT ("Tuner: %s (type %d)\n", getTunerName(tunerType), tunerType);
+	   
+	   // Note: R820T/R820T2 may show "PLL not locked" warning at 2048000 Hz
+	   // This is cosmetic - the tuner works correctly despite the warning.
+	   // Cheap dongles may need PPM correction (-p parameter) for DAB reception.
+	   if (tunerType == RTLSDR_TUNER_R820T) {
+	      DEBUG_PRINT ("Note: R820T may show PLL warning - this is normal\n");
+	   }
+	}
+
+	// Set frequency before sample rate for better PLL stability
+	// This helps prevent PLL lock failures on some tuners
+	(void)(this -> rtlsdr_set_center_freq (device, 100000000));  // 100 MHz safe freq
+
 	r			= this -> rtlsdr_set_sample_rate (device,
 	                                                          inputRate);
 	if (r < 0) {
@@ -219,6 +253,7 @@ rtlsdrHandler::~rtlsdrHandler	(void) {
 	running	= false;
 	if (open)
 	   this -> rtlsdr_close (device);
+	open = false;
 	if (this	-> deviceOptions)
 		free( this	-> deviceOptions );
 	if (Handle != NULL)
@@ -231,7 +266,6 @@ rtlsdrHandler::~rtlsdrHandler	(void) {
 	   delete _I_Buffer;
 	if (gains != NULL)
 	   delete[] gains;
-	open = false;
 }
 
 //
@@ -453,8 +487,18 @@ bool	rtlsdrHandler::load_rtlFunctions (void) {
 
 	rtlsdr_set_opt_string = (pfnrtlsdr_set_opt_string)
 	                  GETPROCADDRESS (Handle, "rtlsdr_set_opt_string");
-	if (rtlsdr_get_device_name == NULL) {
-	   DEBUG_PRINT ("Could not find rtlsdr_set_opt_string\n");
+	// BUG FIX: was checking rtlsdr_get_device_name instead of rtlsdr_set_opt_string
+	if (rtlsdr_set_opt_string == NULL) {
+	   DEBUG_PRINT ("Could not find rtlsdr_set_opt_string (optional, V4 only)\n");
+	   // Not fatal - only needed for RTL-SDR V4 dongles
+	}
+
+	// Optional: tuner type detection for diagnostics
+	rtlsdr_get_tuner_type = (pfnrtlsdr_get_tuner_type)
+	                  GETPROCADDRESS (Handle, "rtlsdr_get_tuner_type");
+	if (rtlsdr_get_tuner_type == NULL) {
+	   DEBUG_PRINT ("Could not find rtlsdr_get_tuner_type (optional)\n");
+	   // Not fatal - tuner detection is optional enhancement
 	}
 
 	DEBUG_PRINT ("OK, functions seem to be loaded\n");
