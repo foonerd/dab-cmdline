@@ -483,20 +483,95 @@ void	pcmHandler (int16_t *buffer, int size, int rate,
 #endif
 }
 
+// Signal quality tracking - static variables for callback data
+static int16_t currentSnr = 0;
+static bool currentSync = false;
+static int16_t currentFibQuality = 0;
+static int16_t currentFrameErrors = 0;
+static int16_t currentRsErrors = 0;
+static int16_t currentAacOk = 0;
+static time_t lastSignalWrite = 0;
+
 static
 void	systemData (bool flag, int16_t snr, int32_t freqOff, void *ctx) {
-//	fprintf (stderr, "synced = %s, snr = %d, offset = %d\n",
-//	                    flag? "on":"off", snr, freqOff);
+	currentSync = flag;
+	currentSnr = snr;
+	if (debugEnabled) {
+		fprintf(stderr, "SYSTEM: sync=%s snr=%d freqOff=%d\n",
+		        flag ? "on" : "off", snr, freqOff);
+	}
 }
 
 static
 void	fibQuality	(int16_t q, void *ctx) {
-//	fprintf (stderr, "fic quality = %d\n", q);
+	currentFibQuality = q;
+	if (debugEnabled) {
+		fprintf(stderr, "FIB_QUALITY: %d\n", q);
+	}
 }
 
 static
 void	mscQuality	(int16_t fe, int16_t rsE, int16_t aacE, void *ctx) {
-//	fprintf (stderr, "msc quality = %d %d %d\n", fe, rsE, aacE);
+	currentFrameErrors = fe;
+	currentRsErrors = rsE;
+	currentAacOk = aacE;
+	
+	if (debugEnabled) {
+		fprintf(stderr, "MSC_QUALITY: fe=%d rs=%d aac=%d\n", fe, rsE, aacE);
+	}
+	
+	// Write signal file every 2 seconds if output directory specified
+	time_t now = time(NULL);
+	if (now - lastSignalWrite >= 2 && dirInfo.length() > 0) {
+		lastSignalWrite = now;
+		
+		// Calculate signal level (0-5) based on FIB quality and AAC decode success
+		int signalLevel = 0;
+		int signalPercent = 0;
+		
+		if (currentFibQuality >= 98 && currentAacOk >= 98) {
+			signalLevel = 5;
+			signalPercent = 95 + (currentFibQuality + currentAacOk) / 40;
+		} else if (currentFibQuality >= 95 && currentAacOk >= 95) {
+			signalLevel = 4;
+			signalPercent = 80 + (currentFibQuality + currentAacOk - 190) / 2;
+		} else if (currentFibQuality >= 85 && currentAacOk >= 85) {
+			signalLevel = 3;
+			signalPercent = 60 + (currentFibQuality + currentAacOk - 170) / 2;
+		} else if (currentFibQuality >= 70 && currentAacOk >= 70) {
+			signalLevel = 2;
+			signalPercent = 40 + (currentFibQuality + currentAacOk - 140) / 2;
+		} else if (currentFibQuality >= 50) {
+			signalLevel = 1;
+			signalPercent = 20 + (currentFibQuality - 50) / 2;
+		} else {
+			signalLevel = 0;
+			signalPercent = currentFibQuality / 3;
+		}
+		
+		if (signalPercent > 100) signalPercent = 100;
+		if (signalPercent < 0) signalPercent = 0;
+		
+		// Write signal file
+		std::string signalFile = dirInfo + "DABsignal.txt";
+		std::ofstream out(signalFile, std::ios::trunc);
+		if (out) {
+			out << "timestamp=" << now << "\n";
+			out << "sync=" << (currentSync ? "1" : "0") << "\n";
+			out << "snr=" << currentSnr << "\n";
+			out << "fib_quality=" << currentFibQuality << "\n";
+			out << "frame_errors=" << currentFrameErrors << "\n";
+			out << "rs_corrections=" << currentRsErrors << "\n";
+			out << "audio_ok=" << currentAacOk << "\n";
+			out << "signal_level=" << signalLevel << "\n";
+			out << "signal_percent=" << signalPercent << "\n";
+			out.close();
+		}
+		
+		// Machine-readable stderr for plugin parsing
+		fprintf(stderr, "DAB_SIGNAL: level=%d percent=%d fib=%d aac=%d\n",
+		        signalLevel, signalPercent, currentFibQuality, currentAacOk);
+	}
 }
 
 
